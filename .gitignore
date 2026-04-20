@@ -1,17 +1,26 @@
+# R / Quarto
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+.history/
 
+# renv
 renv/library/
 renv/staging/
 
+# Logs
 *.log
 
-# Large data
+# Data (large)
 *.dta
 *.csv
 *.rds
 
-# Quarto output (optional)
+# Quarto output + cache
+analysis_cache/
+analysis_files/
 _site/
+
+# Editor
+.vscode/
