@@ -101,20 +101,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>This analysis explores patterns in voting intention across European countries using Eurobarometer survey data. We focus on the role of political interest, media use, income, and time. Due to substantial missingness in the dataset, the analysis prioritizes countries with sufficient complete observations for reliable estimation.</p>
+<hr>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">1. Setup</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load core libraries for data manipulation, import, and modeling</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># Data wrangling + visualization (dplyr, ggplot2, etc.)</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven) <span class="co"># Import Stata (.dta) files</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom) <span class="co"># Convert model outputs into tidy data frames</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary) <span class="co"># Create clean regression tables</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(skimr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(haven) <span class="co"># Import Stata (.dta) files</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom) <span class="co"># Convert model outputs into tidy data frames</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary) <span class="co"># Create clean regression tables</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="load-the-data" class="level1">
-<h1>Load the data</h1>
+</section>
+<section id="load-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-the-data">2. Load the data</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read Eurobarometer dataset (Stata format)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># This dataset contains survey responses across countries and years</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> <span class="fu">read_dta</span>(<span class="st">"eurobarometer_trends.dta"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="exploratory-data-analysis-eda" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda">3. Exploratory Data Analysis (EDA)</h2>
 </section>
 <section id="inspect-the-data-structure" class="level1">
 <h1>Inspect the data structure</h1>
@@ -123,490 +135,2788 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Variable names</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Data types (numeric, factor, etc.)</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># - Sample values</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 1,134,384
-Columns: 146
-$ study_id &lt;dbl&gt; 3521, 3521, 3521, 3521, 3521, 3521, 3521, 3521, 3521, 3521, 3…
-$ version  &lt;chr&gt; "2.0.1 (2008-08-25)", "2.0.1 (2008-08-25)", "2.0.1 (2008-08-2…
-$ id       &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18…
-$ split    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ year     &lt;dbl&gt; 1970, 1970, 1970, 1970, 1970, 1970, 1970, 1970, 1970, 1970, 1…
-$ eb       &lt;dbl+lbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-$ nation1  &lt;dbl+lbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-$ nation2  &lt;dbl+lbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-$ eleclist &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ wsample  &lt;dbl&gt; 0.9675, 1.1990, 0.9386, 1.1261, 1.0190, 1.0835, 1.1677, 0.938…
-$ wnation  &lt;dbl&gt; 0.9675, 1.1990, 0.9386, 1.1261, 1.0190, 1.0835, 1.1677, 0.938…
-$ weuro    &lt;dbl&gt; 1.0722, 1.3287, 1.0401, 1.2479, 1.1292, 1.2007, 1.2940, 1.040…
-$ unifictn &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ membrshp &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ benefit  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ regret   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ euspeed1 &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ euspeed2 &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ speedup  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ comm     &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ commf    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecpres   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecpresf  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epinfo   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epinfof  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epimp1   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epimp2   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epimpf   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ epelfut  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mepatt   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ eurogov  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ semmedia &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ semhope  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ semgood  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustep  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustec  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustcm  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustcj  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trusteo  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustecb &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trusteca &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustcr  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ trustsec &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecfinfo  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecint3   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecint4   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ ecimp    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ underst  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ feel     &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ citizen  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpcultur &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpcurr   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpdatap  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpdrugs  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpeduc   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpenvir  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpforpol &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpimmigr &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpindust &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cppasyl  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cppress  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpscien  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpsecur  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpthird  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpunemp  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpvatax  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpwelfar &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpworker &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ cpworsec &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ satislfe &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ happinss &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ better   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ econpast &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ finapast &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ peaceful &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ conflict &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ worldwar &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ poldisc  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ persuade &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ polint   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ newstv   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ newspap  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ newsrad  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ sochange &lt;dbl+lbl&gt; 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 8, 2, 2, 3, 2, 2, 2, 3, …
-$ valpri1  &lt;dbl+lbl&gt; 3, 3, 1, 3, 2, 4, 1, 1, 3, 1, 3, 3, 3, 3, 1, 3, 1, 1, 3, …
-$ valpri2  &lt;dbl+lbl&gt; 2, 2, 3, 4, 3, 3, 4, 4, 4, 2, 1, 1, 4, 2, 3, 4, 3, 3, 4, …
-$ relimp   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ natpride &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ satisdmo &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ satisdeu &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ efficacy &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mvanm    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mvanw    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mvecol   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mvnatur  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ closepty &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ feelclo  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ voteint  &lt;dbl+lbl&gt; 996, 100, 202, 500, 201, 202,  12, 996, 202,  11, 996, 20…
-$ inclvote &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ lastvote &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ particip &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ euvonext &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ lrs      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ party    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ unionr   &lt;dbl+lbl&gt; 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, …
-$ unionhh  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ unions   &lt;dbl+lbl&gt; 99,  1,  2, 99, 99,  1, 99, 99,  1, 99,  1, 98, 99,  2,  …
-$ married  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ educ     &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ educrec  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ sex      &lt;dbl+lbl&gt; 2, 2, 2, 2, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 1, 2, 1, …
-$ age      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ agerec1  &lt;dbl+lbl&gt;  6,  9,  8,  3,  3, 10,  6,  7,  7, 10,  9,  6,  1,  9,  …
-$ agerec2  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ agerec3  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ agerec4  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ sizehh   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ children &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ childold &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ childyng &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ occup    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ lstoccup &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ secoccup &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ firm1    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ firm2    &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ hh       &lt;dbl+lbl&gt; 2, 2, 2, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 2, 2, 1, 1, 2, 1, …
-$ mhw      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ mie      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ occuphh  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ lstocchh &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ soclass  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ typecmty &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ denom    &lt;dbl+lbl&gt; 110, 110, 110, 110, 998, 110, 110, 110, 110, 110, 110, 99…
-$ churchat &lt;dbl+lbl&gt; 5, 3, 3, 3, 9, 5, 5, 1, 3, 3, 5, 9, 1, 1, 3, 3, 2, 2, 5, …
-$ religf1  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ religf2  &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ income   &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ sizecmty &lt;dbl+lbl&gt; 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 4, …
-$ regionat &lt;dbl+lbl&gt; 333, 333, 333, 724, 333, 333, 333, 333, 333, 333, 724, 72…
-$ language &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ matpmat  &lt;dbl+lbl&gt; 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1, 1, 2, …
-$ mediause &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ oli      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ scmi     &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ eppi     &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ tea      &lt;dbl+lbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…</code></pre>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">view</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
+</section>
+<section id="check-the-shape-of-the-data" class="level1">
+<h1>Check the shape of the data</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check dataset dimensions:</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Number of rows (observations)</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Number of columns (variables)</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check dataset dimensions:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Number of rows (observations)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Number of columns (variables)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1134384     146</code></pre>
 </div>
 </div>
+</section>
+<section id="summary-stats-for-dataset" class="level1">
+<h1>Summary stats for dataset</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary statistics:</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Distribution of numeric variables</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Factor levels / categorical breakdowns</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful for identifying missing values or anomalies</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>    study_id      version                id              split        
- Min.   :3521   Length:1134384     Min.   :      1   Min.   :1.00     
- 1st Qu.:3521   Class :character   1st Qu.: 283597   1st Qu.:1.00     
- Median :3521   Mode  :character   Median : 567192   Median :2.00     
- Mean   :3521                      Mean   : 567192   Mean   :1.79     
- 3rd Qu.:3521                      3rd Qu.: 850788   3rd Qu.:2.00     
- Max.   :3521                      Max.   :1134384   Max.   :9.00     
-                                                     NA's   :1046197  
-      year            eb           nation1          nation2      
- Min.   :1970   Min.   :  1.0   Min.   : 1.000   Min.   : 1.000  
- 1st Qu.:1987   1st Qu.:270.0   1st Qu.: 4.000   1st Qu.: 4.000  
- Median :1994   Median :410.0   Median : 7.000   Median : 7.000  
- Mean   :1992   Mean   :370.1   Mean   : 7.823   Mean   : 7.363  
- 3rd Qu.:1999   3rd Qu.:510.0   3rd Qu.:12.000   3rd Qu.:11.000  
- Max.   :2002   Max.   :572.0   Max.   :18.000   Max.   :18.000  
-                                                                 
-    eleclist         wsample           wnation            weuro        
- Min.   :0.0      Min.   : 0.0000   Min.   : 0.0000   Min.   : 0.0000  
- 1st Qu.:1.0      1st Qu.: 0.7639   1st Qu.: 0.7320   1st Qu.: 0.2361  
- Median :1.0      Median : 0.9452   Median : 0.9487   Median : 0.4715  
- Mean   :1.3      Mean   : 0.9906   Mean   : 0.9897   Mean   : 0.9714  
- 3rd Qu.:1.0      3rd Qu.: 1.1361   3rd Qu.: 1.1726   3rd Qu.: 1.5938  
- Max.   :9.0      Max.   :15.7606   Max.   :16.2368   Max.   :32.1647  
- NA's   :720012                                                        
-    unifictn         membrshp         benefit           regret      
- Min.   :1.0      Min.   :1.000    Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.0      1st Qu.:1.000    1st Qu.:1.00     1st Qu.:1.00    
- Median :2.0      Median :1.000    Median :1.00     Median :2.00    
- Mean   :2.7      Mean   :2.002    Mean   :2.57     Mean   :2.37    
- 3rd Qu.:3.0      3rd Qu.:2.000    3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :8.0      Max.   :9.000    Max.   :9.00     Max.   :8.00    
- NA's   :628815   NA's   :259653   NA's   :508943   NA's   :665960  
-    euspeed1         euspeed2         speedup             comm       
- Min.   : 1.00    Min.   : 1.00    Min.   :1.0       Min.   :1.00    
- 1st Qu.: 3.00    1st Qu.: 4.00    1st Qu.:1.0       1st Qu.:1.00    
- Median : 4.00    Median : 5.00    Median :2.0       Median :2.00    
- Mean   :16.24    Mean   :18.59    Mean   :2.7       Mean   :1.91    
- 3rd Qu.: 5.00    3rd Qu.: 7.00    3rd Qu.:3.0       3rd Qu.:2.00    
- Max.   :99.00    Max.   :99.00    Max.   :8.0       Max.   :9.00    
- NA's   :861544   NA's   :877643   NA's   :1048400   NA's   :968034  
-     commf            ecpres          ecpresf           epinfo      
- Min.   :1.00     Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:2.00     1st Qu.:9.00     1st Qu.:9.00     1st Qu.:1.00    
- Median :9.00     Median :9.00     Median :9.00     Median :1.00    
- Mean   :5.65     Mean   :8.46     Mean   :8.53     Mean   :1.93    
- 3rd Qu.:9.00     3rd Qu.:9.00     3rd Qu.:9.00     3rd Qu.:2.00    
- Max.   :9.00     Max.   :9.00     Max.   :9.00     Max.   :9.00    
- NA's   :952955   NA's   :640144   NA's   :640144   NA's   :759720  
-    epinfof           epimp1           epimp2            epimpf      
- Min.   :1.00     Min.   :1.00     Min.   :1.00      Min.   :1.00    
- 1st Qu.:2.00     1st Qu.:2.00     1st Qu.:1.00      1st Qu.:1.00    
- Median :9.00     Median :2.00     Median :1.00      Median :2.00    
- Mean   :5.61     Mean   :3.36     Mean   :2.04      Mean   :3.09    
- 3rd Qu.:9.00     3rd Qu.:3.00     3rd Qu.:1.00      3rd Qu.:3.00    
- Max.   :9.00     Max.   :9.00     Max.   :8.00      Max.   :9.00    
- NA's   :901151   NA's   :761474   NA's   :1070203   NA's   :751756  
-    epelfut            mepatt           eurogov          semmedia      
- Min.   :1.00      Min.   :1.00      Min.   :1.00     Min.   :1.00     
- 1st Qu.:1.00      1st Qu.:1.00      1st Qu.:1.00     1st Qu.:1.00     
- Median :2.00      Median :2.00      Median :2.00     Median :1.00     
- Mean   :2.95      Mean   :2.33      Mean   :3.24     Mean   :1.52     
- 3rd Qu.:2.00      3rd Qu.:2.00      3rd Qu.:8.00     3rd Qu.:2.00     
- Max.   :8.00      Max.   :8.00      Max.   :9.00     Max.   :8.00     
- NA's   :1079746   NA's   :1079882   NA's   :902429   NA's   :1006454  
-    semhope          semgood          trustep           trustec       
- Min.   :1.00     Min.   :1.0      Min.   :1.0       Min.   :1.00     
- 1st Qu.:2.00     1st Qu.:1.0      1st Qu.:1.0       1st Qu.:1.00     
- Median :2.00     Median :2.0      Median :1.0       Median :2.00     
- Mean   :3.23     Mean   :2.4      Mean   :2.6       Mean   :2.93     
- 3rd Qu.:3.00     3rd Qu.:2.0      3rd Qu.:2.0       3rd Qu.:2.00     
- Max.   :9.00     Max.   :8.0      Max.   :8.0       Max.   :8.00     
- NA's   :893472   NA's   :958354   NA's   :1054132   NA's   :1054132  
-    trustcm           trustcj           trusteo           trustecb      
- Min.   :1.00      Min.   :1.00      Min.   :1.00      Min.   :1.0      
- 1st Qu.:1.00      1st Qu.:1.00      1st Qu.:1.00      1st Qu.:1.0      
- Median :2.00      Median :1.00      Median :2.00      Median :2.0      
- Mean   :3.34      Mean   :3.08      Mean   :4.37      Mean   :3.2      
- 3rd Qu.:8.00      3rd Qu.:8.00      3rd Qu.:8.00      3rd Qu.:8.0      
- Max.   :8.00      Max.   :8.00      Max.   :8.00      Max.   :8.0      
- NA's   :1054132   NA's   :1054132   NA's   :1054132   NA's   :1054132  
-    trusteca          trustcr           trustsec          ecfinfo       
- Min.   :1.00      Min.   :1.00      Min.   :1.00      Min.   :1.00     
- 1st Qu.:1.00      1st Qu.:1.00      1st Qu.:1.00      1st Qu.:2.00     
- Median :2.00      Median :2.00      Median :2.00      Median :3.00     
- Mean   :4.02      Mean   :4.62      Mean   :4.42      Mean   :3.03     
- 3rd Qu.:8.00      3rd Qu.:8.00      3rd Qu.:8.00      3rd Qu.:3.00     
- Max.   :8.00      Max.   :8.00      Max.   :8.00      Max.   :9.00     
- NA's   :1054132   NA's   :1054132   NA's   :1054132   NA's   :1009797  
-     ecint3            ecint4           ecimp           underst       
- Min.   :1.00      Min.   :1.00     Min.   :1.00     Min.   :1.00     
- 1st Qu.:2.00      1st Qu.:2.00     1st Qu.:1.00     1st Qu.:2.00     
- Median :2.00      Median :3.00     Median :2.00     Median :2.00     
- Mean   :2.24      Mean   :2.94     Mean   :2.27     Mean   :3.01     
- 3rd Qu.:3.00      3rd Qu.:3.00     3rd Qu.:2.00     3rd Qu.:3.00     
- Max.   :8.00      Max.   :9.00     Max.   :8.00     Max.   :9.00     
- NA's   :1053765   NA's   :986311   NA's   :955177   NA's   :1010824  
-      feel           citizen           cpcultur          cpcurr      
- Min.   :1.00     Min.   :0.00      Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00     1st Qu.:2.00      1st Qu.:1.00     1st Qu.:1.00    
- Median :2.00     Median :3.00      Median :1.00     Median :2.00    
- Mean   :1.96     Mean   :2.55      Mean   :2.08     Mean   :2.22    
- 3rd Qu.:2.00     3rd Qu.:3.00      3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :9.00     Max.   :8.00      Max.   :9.00     Max.   :9.00    
- NA's   :925441   NA's   :1061402   NA's   :832272   NA's   :755938  
-    cpdatap           cpdrugs           cpeduc          cpenvir      
- Min.   :1.00      Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00      1st Qu.:1.00     1st Qu.:1.00     1st Qu.:1.00    
- Median :1.00      Median :2.00     Median :1.00     Median :2.00    
- Mean   :2.25      Mean   :2.23     Mean   :1.84     Mean   :2.09    
- 3rd Qu.:2.00      3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :8.00      Max.   :9.00     Max.   :9.00     Max.   :9.00    
- NA's   :1014818   NA's   :860368   NA's   :755938   NA's   :755938  
-    cpforpol         cpimmigr         cpindust          cppasyl      
- Min.   :1.00     Min.   :1.00     Min.   :1.00      Min.   :1.00    
- 1st Qu.:2.00     1st Qu.:1.00     1st Qu.:1.00      1st Qu.:1.00    
- Median :2.00     Median :2.00     Median :2.00      Median :2.00    
- Mean   :2.46     Mean   :2.13     Mean   :2.21      Mean   :2.23    
- 3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00      3rd Qu.:2.00    
- Max.   :9.00     Max.   :9.00     Max.   :9.00      Max.   :9.00    
- NA's   :755938   NA's   :832272   NA's   :1026824   NA's   :832272  
-    cppress          cpscien          cpsecur          cpthird      
- Min.   :1.00     Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00     1st Qu.:2.00     1st Qu.:1.00     1st Qu.:2.00    
- Median :1.00     Median :2.00     Median :2.00     Median :2.00    
- Mean   :2.12     Mean   :2.36     Mean   :2.03     Mean   :2.51    
- 3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :9.00     Max.   :9.00     Max.   :9.00     Max.   :9.00    
- NA's   :755938   NA's   :755938   NA's   :767713   NA's   :868439  
-    cpunemp          cpvatax          cpwelfar         cpworker     
- Min.   :1.00     Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00     1st Qu.:1.00     1st Qu.:1.00     1st Qu.:1.00    
- Median :2.00     Median :2.00     Median :1.00     Median :1.00    
- Mean   :2.02     Mean   :2.47     Mean   :1.82     Mean   :2.32    
- 3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :9.00     Max.   :9.00     Max.   :9.00     Max.   :9.00    
- NA's   :832272   NA's   :868439   NA's   :755938   NA's   :950490  
-    cpworsec          satislfe         happinss          better      
- Min.   :1.00      Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00      1st Qu.:1.00     1st Qu.:2.00     1st Qu.:1.00    
- Median :1.00      Median :2.00     Median :2.00     Median :2.00    
- Mean   :2.34      Mean   :2.05     Mean   :2.07     Mean   :2.43    
- 3rd Qu.:2.00      3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:3.00    
- Max.   :9.00      Max.   :9.00     Max.   :8.00     Max.   :9.00    
- NA's   :1009526   NA's   :475244   NA's   :996785   NA's   :888334  
-    econpast         finapast         peaceful          conflict      
- Min.   :1.00     Min.   :1.00     Min.   :1.00      Min.   :1.0      
- 1st Qu.:3.00     1st Qu.:3.00     1st Qu.:2.00      1st Qu.:1.0      
- Median :4.00     Median :3.00     Median :3.00      Median :2.0      
- Mean   :3.85     Mean   :3.59     Mean   :2.86      Mean   :2.3      
- 3rd Qu.:4.00     3rd Qu.:4.00     3rd Qu.:3.00      3rd Qu.:2.0      
- Max.   :9.00     Max.   :9.00     Max.   :9.00      Max.   :8.0      
- NA's   :987368   NA's   :975523   NA's   :1038108   NA's   :1038108  
-    worldwar          poldisc          persuade          polint       
- Min.   : 1.00     Min.   :1.00     Min.   :1.000    Min.   :1.00     
- 1st Qu.: 6.00     1st Qu.:2.00     1st Qu.:2.000    1st Qu.:2.00     
- Median :10.00     Median :2.00     Median :2.000    Median :3.00     
- Mean   :15.74     Mean   :2.24     Mean   :2.672    Mean   :2.85     
- 3rd Qu.:11.00     3rd Qu.:3.00     3rd Qu.:3.000    3rd Qu.:3.00     
- Max.   :99.00     Max.   :9.00     Max.   :9.000    Max.   :9.00     
- NA's   :1030447   NA's   :258713   NA's   :249472   NA's   :1022142  
-     newstv          newspap          newsrad          sochange     
- Min.   :1.00     Min.   :1.0      Min.   :1.00     Min.   :1.00    
- 1st Qu.:1.00     1st Qu.:1.0      1st Qu.:1.00     1st Qu.:2.00    
- Median :1.00     Median :2.0      Median :2.00     Median :2.00    
- Mean   :1.62     Mean   :2.4      Mean   :2.38     Mean   :2.65    
- 3rd Qu.:2.00     3rd Qu.:4.0      3rd Qu.:4.00     3rd Qu.:3.00    
- Max.   :9.00     Max.   :9.0      Max.   :9.00     Max.   :8.00    
- NA's   :740096   NA's   :740096   NA's   :740096   NA's   :811728  
-    valpri1          valpri2           relimp           natpride     
- Min.   :1.00     Min.   :1.00     Min.   :1.0       Min.   :1.0     
- 1st Qu.:1.00     1st Qu.:2.00     1st Qu.:1.0       1st Qu.:1.0     
- Median :2.00     Median :3.00     Median :2.0       Median :2.0     
- Mean   :2.32     Mean   :2.84     Mean   :3.4       Mean   :2.3     
- 3rd Qu.:3.00     3rd Qu.:4.00     3rd Qu.:3.0       3rd Qu.:2.0     
- Max.   :9.00     Max.   :9.00     Max.   :9.0       Max.   :9.0     
- NA's   :599861   NA's   :599861   NA's   :1050062   NA's   :956554  
-    satisdmo         satisdeu         efficacy           mvanm        
- Min.   :1.00     Min.   :1.00     Min.   :1.00      Min.   :1.00     
- 1st Qu.:2.00     1st Qu.:2.00     1st Qu.:1.00      1st Qu.:2.00     
- Median :2.00     Median :3.00     Median :2.00      Median :3.00     
- Mean   :2.78     Mean   :3.54     Mean   :2.31      Mean   :4.47     
- 3rd Qu.:3.00     3rd Qu.:4.00     3rd Qu.:2.00      3rd Qu.:9.00     
- Max.   :9.00     Max.   :9.00     Max.   :8.00      Max.   :9.00     
- NA's   :520988   NA's   :929139   NA's   :1083694   NA's   :1066235  
-     mvanw             mvecol           mvnatur           closepty     
- Min.   :1.00      Min.   :1.00      Min.   :1.00      Min.   :1.00    
- 1st Qu.:1.00      1st Qu.:1.00      1st Qu.:1.00      1st Qu.:2.00    
- Median :2.00      Median :2.00      Median :2.00      Median :3.00    
- Mean   :4.25      Mean   :4.37      Mean   :3.82      Mean   :3.32    
- 3rd Qu.:9.00      3rd Qu.:9.00      3rd Qu.:9.00      3rd Qu.:4.00    
- Max.   :9.00      Max.   :9.00      Max.   :9.00      Max.   :9.00    
- NA's   :1066235   NA's   :1066235   NA's   :1066235   NA's   :671142  
-    feelclo          voteint          inclvote         lastvote     
- Min.   :  0      Min.   :  0.0    Min.   :  0.0    Min.   :  0.0   
- 1st Qu.:500      1st Qu.:200.0    1st Qu.:999.0    1st Qu.:200.0   
- Median :999      Median :400.0    Median :999.0    Median :500.0   
- Mean   :797      Mean   :486.8    Mean   :918.1    Mean   :595.7   
- 3rd Qu.:999      3rd Qu.:990.0    3rd Qu.:999.0    3rd Qu.:999.0   
- Max.   :999      Max.   :999.0    Max.   :999.0    Max.   :999.0   
- NA's   :839414   NA's   :424813   NA's   :892351   NA's   :751633  
-    particip         euvonext            lrs            party        
- Min.   :1.00     Min.   :  0.0     Min.   : 1.00   Min.   :0.00     
- 1st Qu.:1.00     1st Qu.:200.0     1st Qu.: 4.00   1st Qu.:0.00     
- Median :2.00     Median :401.0     Median : 6.00   Median :0.00     
- Mean   :2.51     Mean   :553.2     Mean   :22.09   Mean   :0.08     
- 3rd Qu.:3.00     3rd Qu.:998.0     3rd Qu.: 8.00   3rd Qu.:0.00     
- Max.   :9.00     Max.   :999.0     Max.   :99.00   Max.   :8.00     
- NA's   :956481   NA's   :1039307   NA's   :94002   NA's   :1008696  
-     unionr          unionhh           unions           married      
- Min.   :0.00     Min.   :0.00     Min.   : 1.00     Min.   : 1.000  
- 1st Qu.:0.00     1st Qu.:0.00     1st Qu.:99.00     1st Qu.: 2.000  
- Median :0.00     Median :0.00     Median :99.00     Median : 2.000  
- Mean   :0.35     Mean   :0.49     Mean   :85.11     Mean   : 2.818  
- 3rd Qu.:0.00     3rd Qu.:0.00     3rd Qu.:99.00     3rd Qu.: 2.000  
- Max.   :9.00     Max.   :9.00     Max.   :99.00     Max.   :99.000  
- NA's   :870333   NA's   :894843   NA's   :1003652   NA's   :122721  
-      educ           educrec             sex             age       
- Min.   : 1.000   Min.   :1.00      Min.   :1.000   Min.   : 0.0   
- 1st Qu.: 1.000   1st Qu.:1.00      1st Qu.:1.000   1st Qu.:28.0   
- Median : 4.000   Median :2.00      Median :2.000   Median :41.0   
- Mean   : 5.484   Mean   :2.16      Mean   :1.519   Mean   :43.3   
- 3rd Qu.: 8.000   3rd Qu.:3.00      3rd Qu.:2.000   3rd Qu.:58.0   
- Max.   :99.000   Max.   :4.00      Max.   :8.000   Max.   :99.0   
- NA's   :116476   NA's   :1051860                   NA's   :59191  
-    agerec1           agerec2           agerec3           agerec4       
- Min.   : 1.00     Min.   : 1.00     Min.   : 1.00     Min.   :1.00     
- 1st Qu.: 3.00     1st Qu.: 2.00     1st Qu.: 3.00     1st Qu.:2.00     
- Median : 6.00     Median : 5.00     Median : 6.00     Median :3.00     
- Mean   : 5.82     Mean   : 5.11     Mean   : 6.48     Mean   :3.38     
- 3rd Qu.: 9.00     3rd Qu.: 8.00     3rd Qu.: 9.00     3rd Qu.:5.00     
- Max.   :10.00     Max.   :10.00     Max.   :98.00     Max.   :6.00     
- NA's   :1125817   NA's   :1125143   NA's   :1125324   NA's   :1102061  
-     sizehh          children         childold         childyng     
- Min.   : 1.000   Min.   : 0.00    Min.   : 0.00    Min.   : 0.00   
- 1st Qu.: 2.000   1st Qu.: 0.00    1st Qu.: 0.00    1st Qu.: 0.00   
- Median : 3.000   Median : 0.00    Median : 0.00    Median : 0.00   
- Mean   : 3.263   Mean   : 1.73    Mean   : 0.67    Mean   : 0.58   
- 3rd Qu.: 4.000   3rd Qu.: 1.00    3rd Qu.: 1.00    3rd Qu.: 0.00   
- Max.   :99.000   Max.   :99.00    Max.   :98.00    Max.   :98.00   
- NA's   :200988   NA's   :505974   NA's   :857630   NA's   :857630  
-     occup          lstoccup         secoccup          firm1       
- Min.   :110.0   Min.   :111.0    Min.   :1.00     Min.   :1.00    
- 1st Qu.:311.0   1st Qu.:413.0    1st Qu.:3.00     1st Qu.:2.00    
- Median :510.0   Median :999.0    Median :4.00     Median :9.00    
- Mean   :413.8   Mean   :766.7    Mean   :5.32     Mean   :5.98    
- 3rd Qu.:521.0   3rd Qu.:999.0    3rd Qu.:9.00     3rd Qu.:9.00    
- Max.   :999.0   Max.   :999.0    Max.   :9.00     Max.   :9.00    
- NA's   :40352   NA's   :317106   NA's   :907939   NA's   :867451  
-     firm2              hh              mhw              mie        
- Min.   :1.00     Min.   :1.00     Min.   :1.00     Min.   :1.00    
- 1st Qu.:4.00     1st Qu.:1.00     1st Qu.:1.00     1st Qu.:1.00    
- Median :9.00     Median :1.00     Median :1.00     Median :1.00    
- Mean   :6.59     Mean   :1.51     Mean   :1.56     Mean   :1.54    
- 3rd Qu.:9.00     3rd Qu.:2.00     3rd Qu.:2.00     3rd Qu.:2.00    
- Max.   :9.00     Max.   :8.00     Max.   :9.00     Max.   :9.00    
- NA's   :976553   NA's   :707834   NA's   :663763   NA's   :535561  
-    occuphh          lstocchh         soclass          typecmty     
- Min.   :110.0    Min.   :111.0    Min.   : 1.00    Min.   :1.00    
- 1st Qu.:410.0    1st Qu.:999.0    1st Qu.: 1.00    1st Qu.:1.00    
- Median :999.0    Median :999.0    Median : 3.00    Median :2.00    
- Mean   :702.3    Mean   :944.5    Mean   : 7.58    Mean   :1.98    
- 3rd Qu.:999.0    3rd Qu.:999.0    3rd Qu.: 3.00    3rd Qu.:3.00    
- Max.   :999.0    Max.   :999.0    Max.   :99.00    Max.   :8.00    
- NA's   :121452   NA's   :398206   NA's   :848904   NA's   :375445  
-     denom           churchat         religf1           religf2      
- Min.   :110.0    Min.   :1.00     Min.   :1.0       Min.   :1.00    
- 1st Qu.:110.0    1st Qu.:3.00     1st Qu.:1.0       1st Qu.:1.00    
- Median :120.0    Median :3.00     Median :1.0       Median :1.00    
- Mean   :355.6    Mean   :4.52     Mean   :1.7       Mean   :2.03    
- 3rd Qu.:990.0    3rd Qu.:5.00     3rd Qu.:2.0       3rd Qu.:2.00    
- Max.   :999.0    Max.   :9.00     Max.   :8.0       Max.   :9.00    
- NA's   :643077   NA's   :732949   NA's   :1073779   NA's   :926553  
-     income         sizecmty         regionat        language     
- Min.   : 1.00   Min.   : 1.000   Min.   :  0.0   Min.   :1.00    
- 1st Qu.: 5.00   1st Qu.: 2.000   1st Qu.:132.0   1st Qu.:9.00    
- Median : 8.00   Median : 3.000   Median :240.0   Median :9.00    
- Mean   :29.28   Mean   : 5.065   Mean   :269.5   Mean   :7.79    
- 3rd Qu.:96.00   3rd Qu.: 5.000   3rd Qu.:320.0   3rd Qu.:9.00    
- Max.   :99.00   Max.   :99.000   Max.   :999.0   Max.   :9.00    
- NA's   :52308   NA's   :29636                    NA's   :427786  
-    matpmat          mediause           oli              scmi       
- Min.   :1.00     Min.   :1.00     Min.   :1.000    Min.   :1.00    
- 1st Qu.:1.00     1st Qu.:1.00     1st Qu.:2.000    1st Qu.:3.00    
- Median :2.00     Median :2.00     Median :3.000    Median :5.00    
- Mean   :2.15     Mean   :1.99     Mean   :2.672    Mean   :4.37    
- 3rd Qu.:2.00     3rd Qu.:3.00     3rd Qu.:3.000    3rd Qu.:5.00    
- Max.   :9.00     Max.   :9.00     Max.   :9.000    Max.   :8.00    
- NA's   :599861   NA's   :740096   NA's   :258713   NA's   :665960  
-      eppi             tea        
- Min.   : 1.00    Min.   :1.00    
- 1st Qu.: 2.00    1st Qu.:1.00    
- Median : 6.00    Median :1.00    
- Mean   :27.69    Mean   :2.37    
- 3rd Qu.:13.00    3rd Qu.:2.00    
- Max.   :99.00    Max.   :9.00    
- NA's   :794327   NA's   :638056  </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary statistics:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Distribution of numeric variables</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Factor levels / categorical breakdowns</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Useful for identifying missing values or anomalies</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">skim</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">eb_data</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Number of rows</td>
+<td style="text-align: left;">1134384</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Number of columns</td>
+<td style="text-align: left;">146</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">_______________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Column type frequency:</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">character</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">numeric</td>
+<td style="text-align: left;">145</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">________________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Group variables</td>
+<td style="text-align: left;">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 13%">
+<col style="width: 19%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 8%">
+<col style="width: 12%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: right;">min</th>
+<th style="text-align: right;">max</th>
+<th style="text-align: right;">empty</th>
+<th style="text-align: right;">n_unique</th>
+<th style="text-align: right;">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">version</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 4%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 5%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">p0</th>
+<th style="text-align: right;">p25</th>
+<th style="text-align: right;">p50</th>
+<th style="text-align: right;">p75</th>
+<th style="text-align: right;">p100</th>
+<th style="text-align: left;">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">study_id</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">3521.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">3521</td>
+<td style="text-align: right;">3521.00</td>
+<td style="text-align: right;">3521.00</td>
+<td style="text-align: right;">3521.00</td>
+<td style="text-align: right;">3521.00</td>
+<td style="text-align: left;">▁▁▇▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">id</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">567192.50</td>
+<td style="text-align: right;">327468.60</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">283596.75</td>
+<td style="text-align: right;">567192.50</td>
+<td style="text-align: right;">850788.25</td>
+<td style="text-align: right;">1134384.00</td>
+<td style="text-align: left;">▇▇▇▇▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">split</td>
+<td style="text-align: right;">1046197</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">1.79</td>
+<td style="text-align: right;">1.37</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">year</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1991.72</td>
+<td style="text-align: right;">8.32</td>
+<td style="text-align: right;">1970</td>
+<td style="text-align: right;">1987.00</td>
+<td style="text-align: right;">1994.00</td>
+<td style="text-align: right;">1999.00</td>
+<td style="text-align: right;">2002.00</td>
+<td style="text-align: left;">▂▂▃▆▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">eb</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">370.14</td>
+<td style="text-align: right;">163.55</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">270.00</td>
+<td style="text-align: right;">410.00</td>
+<td style="text-align: right;">510.00</td>
+<td style="text-align: right;">572.00</td>
+<td style="text-align: left;">▂▂▃▅▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">nation1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">7.82</td>
+<td style="text-align: right;">4.86</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">7.00</td>
+<td style="text-align: right;">12.00</td>
+<td style="text-align: right;">18.00</td>
+<td style="text-align: left;">▇▅▆▃▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">nation2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">7.36</td>
+<td style="text-align: right;">4.72</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">7.00</td>
+<td style="text-align: right;">11.00</td>
+<td style="text-align: right;">18.00</td>
+<td style="text-align: left;">▇▅▅▂▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">eleclist</td>
+<td style="text-align: right;">720012</td>
+<td style="text-align: right;">0.37</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">1.14</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">wsample</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.14</td>
+<td style="text-align: right;">15.76</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">wnation</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.73</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.17</td>
+<td style="text-align: right;">16.24</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">weuro</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">1.59</td>
+<td style="text-align: right;">32.16</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">unifictn</td>
+<td style="text-align: right;">628815</td>
+<td style="text-align: right;">0.45</td>
+<td style="text-align: right;">2.70</td>
+<td style="text-align: right;">2.18</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">membrshp</td>
+<td style="text-align: right;">259653</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">1.82</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">benefit</td>
+<td style="text-align: right;">508943</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">2.57</td>
+<td style="text-align: right;">2.63</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">regret</td>
+<td style="text-align: right;">665960</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">2.37</td>
+<td style="text-align: right;">2.09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">euspeed1</td>
+<td style="text-align: right;">861544</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">16.24</td>
+<td style="text-align: right;">31.99</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">euspeed2</td>
+<td style="text-align: right;">877643</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">18.59</td>
+<td style="text-align: right;">33.19</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">7.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">speedup</td>
+<td style="text-align: right;">1048400</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">2.70</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">comm</td>
+<td style="text-align: right;">968034</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">1.91</td>
+<td style="text-align: right;">1.71</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">commf</td>
+<td style="text-align: right;">952955</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">5.65</td>
+<td style="text-align: right;">3.64</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▅▂▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ecpres</td>
+<td style="text-align: right;">640144</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">8.46</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▁▁▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ecpresf</td>
+<td style="text-align: right;">640144</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">8.53</td>
+<td style="text-align: right;">1.75</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▁▁▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">epinfo</td>
+<td style="text-align: right;">759720</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">1.93</td>
+<td style="text-align: right;">1.79</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">epinfof</td>
+<td style="text-align: right;">901151</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: right;">5.61</td>
+<td style="text-align: right;">3.63</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▆▂▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">epimp1</td>
+<td style="text-align: right;">761474</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">3.36</td>
+<td style="text-align: right;">2.45</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▁▁▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">epimp2</td>
+<td style="text-align: right;">1070203</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">2.04</td>
+<td style="text-align: right;">2.39</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">epimpf</td>
+<td style="text-align: right;">751756</td>
+<td style="text-align: right;">0.34</td>
+<td style="text-align: right;">3.09</td>
+<td style="text-align: right;">2.86</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">epelfut</td>
+<td style="text-align: right;">1079746</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">2.95</td>
+<td style="text-align: right;">2.84</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mepatt</td>
+<td style="text-align: right;">1079882</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">2.33</td>
+<td style="text-align: right;">2.19</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">eurogov</td>
+<td style="text-align: right;">902429</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">3.24</td>
+<td style="text-align: right;">3.09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">semmedia</td>
+<td style="text-align: right;">1006454</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">1.52</td>
+<td style="text-align: right;">1.38</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">semhope</td>
+<td style="text-align: right;">893472</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: right;">3.23</td>
+<td style="text-align: right;">2.35</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">semgood</td>
+<td style="text-align: right;">958354</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.40</td>
+<td style="text-align: right;">2.29</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trustep</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">2.60</td>
+<td style="text-align: right;">2.67</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">trustec</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">2.93</td>
+<td style="text-align: right;">2.85</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trustcm</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">3.34</td>
+<td style="text-align: right;">3.04</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">trustcj</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">3.08</td>
+<td style="text-align: right;">2.99</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trusteo</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">4.37</td>
+<td style="text-align: right;">3.30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▆</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">trustecb</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">3.20</td>
+<td style="text-align: right;">3.02</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trusteca</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">4.02</td>
+<td style="text-align: right;">3.26</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▅</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">trustcr</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">4.62</td>
+<td style="text-align: right;">3.29</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">trustsec</td>
+<td style="text-align: right;">1054132</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">4.42</td>
+<td style="text-align: right;">3.29</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ecfinfo</td>
+<td style="text-align: right;">1009797</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">3.03</td>
+<td style="text-align: right;">1.24</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▃▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ecint3</td>
+<td style="text-align: right;">1053765</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">2.24</td>
+<td style="text-align: right;">1.28</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▃▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ecint4</td>
+<td style="text-align: right;">986311</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">2.94</td>
+<td style="text-align: right;">1.55</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▆▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ecimp</td>
+<td style="text-align: right;">955177</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.27</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">underst</td>
+<td style="text-align: right;">1010824</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">3.01</td>
+<td style="text-align: right;">2.40</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">feel</td>
+<td style="text-align: right;">925441</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">citizen</td>
+<td style="text-align: right;">1061402</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">2.55</td>
+<td style="text-align: right;">1.25</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▂▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpcultur</td>
+<td style="text-align: right;">832272</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">2.08</td>
+<td style="text-align: right;">2.18</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpcurr</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">2.22</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpdatap</td>
+<td style="text-align: right;">1014818</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">2.25</td>
+<td style="text-align: right;">2.25</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpdrugs</td>
+<td style="text-align: right;">860368</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">2.23</td>
+<td style="text-align: right;">1.85</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpeduc</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">1.84</td>
+<td style="text-align: right;">1.88</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpenvir</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">2.09</td>
+<td style="text-align: right;">1.76</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpforpol</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">2.46</td>
+<td style="text-align: right;">2.12</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpimmigr</td>
+<td style="text-align: right;">832272</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">2.13</td>
+<td style="text-align: right;">2.02</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpindust</td>
+<td style="text-align: right;">1026824</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">2.21</td>
+<td style="text-align: right;">2.04</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cppasyl</td>
+<td style="text-align: right;">832272</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">2.23</td>
+<td style="text-align: right;">2.12</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cppress</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">2.12</td>
+<td style="text-align: right;">2.14</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpscien</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">2.36</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpsecur</td>
+<td style="text-align: right;">767713</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">2.03</td>
+<td style="text-align: right;">1.94</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpthird</td>
+<td style="text-align: right;">868439</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">2.51</td>
+<td style="text-align: right;">2.10</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpunemp</td>
+<td style="text-align: right;">832272</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">2.02</td>
+<td style="text-align: right;">1.88</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpvatax</td>
+<td style="text-align: right;">868439</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">2.47</td>
+<td style="text-align: right;">2.39</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpwelfar</td>
+<td style="text-align: right;">755938</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">1.82</td>
+<td style="text-align: right;">1.85</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cpworker</td>
+<td style="text-align: right;">950490</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.32</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cpworsec</td>
+<td style="text-align: right;">1009526</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">2.34</td>
+<td style="text-align: right;">2.47</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">satislfe</td>
+<td style="text-align: right;">475244</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">1.13</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">happinss</td>
+<td style="text-align: right;">996785</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">2.07</td>
+<td style="text-align: right;">1.09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">better</td>
+<td style="text-align: right;">888334</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">2.43</td>
+<td style="text-align: right;">1.90</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">econpast</td>
+<td style="text-align: right;">987368</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">3.85</td>
+<td style="text-align: right;">1.86</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▃▇▂▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">finapast</td>
+<td style="text-align: right;">975523</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">3.59</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▂▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">peaceful</td>
+<td style="text-align: right;">1038108</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">2.86</td>
+<td style="text-align: right;">1.83</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▆▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">conflict</td>
+<td style="text-align: right;">1038108</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">2.30</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">worldwar</td>
+<td style="text-align: right;">1030447</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">15.74</td>
+<td style="text-align: right;">24.83</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">10.00</td>
+<td style="text-align: right;">11.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">poldisc</td>
+<td style="text-align: right;">258713</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">2.24</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">persuade</td>
+<td style="text-align: right;">249472</td>
+<td style="text-align: right;">0.78</td>
+<td style="text-align: right;">2.67</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▇▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">polint</td>
+<td style="text-align: right;">1022142</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">2.85</td>
+<td style="text-align: right;">1.41</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▆▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">newstv</td>
+<td style="text-align: right;">740096</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">1.62</td>
+<td style="text-align: right;">1.29</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">newspap</td>
+<td style="text-align: right;">740096</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">2.40</td>
+<td style="text-align: right;">1.69</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▂▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">newsrad</td>
+<td style="text-align: right;">740096</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: right;">1.71</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▂▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sochange</td>
+<td style="text-align: right;">811728</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">2.65</td>
+<td style="text-align: right;">1.60</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▃▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">valpri1</td>
+<td style="text-align: right;">599861</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">2.32</td>
+<td style="text-align: right;">1.49</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▅▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">valpri2</td>
+<td style="text-align: right;">599861</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">2.84</td>
+<td style="text-align: right;">1.65</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▆▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">relimp</td>
+<td style="text-align: right;">1050062</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">3.40</td>
+<td style="text-align: right;">2.88</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▃▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">natpride</td>
+<td style="text-align: right;">956554</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.30</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">satisdmo</td>
+<td style="text-align: right;">520988</td>
+<td style="text-align: right;">0.54</td>
+<td style="text-align: right;">2.78</td>
+<td style="text-align: right;">1.53</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▆▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">satisdeu</td>
+<td style="text-align: right;">929139</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">3.54</td>
+<td style="text-align: right;">2.20</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▇▁▁▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">efficacy</td>
+<td style="text-align: right;">1083694</td>
+<td style="text-align: right;">0.04</td>
+<td style="text-align: right;">2.31</td>
+<td style="text-align: right;">2.13</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mvanm</td>
+<td style="text-align: right;">1066235</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">4.47</td>
+<td style="text-align: right;">3.30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▅▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">mvanw</td>
+<td style="text-align: right;">1066235</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">4.25</td>
+<td style="text-align: right;">3.38</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▆</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mvecol</td>
+<td style="text-align: right;">1066235</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">4.37</td>
+<td style="text-align: right;">3.43</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▆</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">mvnatur</td>
+<td style="text-align: right;">1066235</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">3.82</td>
+<td style="text-align: right;">3.48</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">closepty</td>
+<td style="text-align: right;">671142</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">3.32</td>
+<td style="text-align: right;">1.52</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▃▇▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">feelclo</td>
+<td style="text-align: right;">839414</td>
+<td style="text-align: right;">0.26</td>
+<td style="text-align: right;">796.96</td>
+<td style="text-align: right;">326.31</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">500.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▁▂▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">voteint</td>
+<td style="text-align: right;">424813</td>
+<td style="text-align: right;">0.63</td>
+<td style="text-align: right;">486.77</td>
+<td style="text-align: right;">347.89</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">200.00</td>
+<td style="text-align: right;">400.00</td>
+<td style="text-align: right;">990.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▃▇▆▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">inclvote</td>
+<td style="text-align: right;">892351</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: right;">918.15</td>
+<td style="text-align: right;">260.28</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▁▁▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lastvote</td>
+<td style="text-align: right;">751633</td>
+<td style="text-align: right;">0.34</td>
+<td style="text-align: right;">595.74</td>
+<td style="text-align: right;">387.46</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">200.00</td>
+<td style="text-align: right;">500.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▂▅▃▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">particip</td>
+<td style="text-align: right;">956481</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.51</td>
+<td style="text-align: right;">2.24</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">euvonext</td>
+<td style="text-align: right;">1039307</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">553.23</td>
+<td style="text-align: right;">366.52</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">200.00</td>
+<td style="text-align: right;">401.00</td>
+<td style="text-align: right;">998.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▂▆▅▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lrs</td>
+<td style="text-align: right;">94002</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">22.09</td>
+<td style="text-align: right;">35.66</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">party</td>
+<td style="text-align: right;">1008696</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">unionr</td>
+<td style="text-align: right;">870333</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">1.17</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">unionhh</td>
+<td style="text-align: right;">894843</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">1.63</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">unions</td>
+<td style="text-align: right;">1003652</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">85.11</td>
+<td style="text-align: right;">33.02</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▁▁▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">married</td>
+<td style="text-align: right;">122721</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">2.82</td>
+<td style="text-align: right;">7.43</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">educ</td>
+<td style="text-align: right;">116476</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">5.48</td>
+<td style="text-align: right;">9.71</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">educrec</td>
+<td style="text-align: right;">1051860</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">2.16</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: left;">▆▇▁▅▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sex</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.52</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">age</td>
+<td style="text-align: right;">59191</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">43.30</td>
+<td style="text-align: right;">17.99</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">28.00</td>
+<td style="text-align: right;">41.00</td>
+<td style="text-align: right;">58.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▂▇▆▅▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">agerec1</td>
+<td style="text-align: right;">1125817</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">5.82</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">10.00</td>
+<td style="text-align: left;">▅▅▆▅▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">agerec2</td>
+<td style="text-align: right;">1125143</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">5.11</td>
+<td style="text-align: right;">3.14</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">10.00</td>
+<td style="text-align: left;">▇▆▅▅▆</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">agerec3</td>
+<td style="text-align: right;">1125324</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">6.48</td>
+<td style="text-align: right;">6.65</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">98.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">agerec4</td>
+<td style="text-align: right;">1102061</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">3.38</td>
+<td style="text-align: right;">1.69</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: left;">▇▅▃▃▃</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sizehh</td>
+<td style="text-align: right;">200988</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">3.26</td>
+<td style="text-align: right;">4.98</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">children</td>
+<td style="text-align: right;">505974</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">10.62</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">childold</td>
+<td style="text-align: right;">857630</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">4.64</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">98.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">childyng</td>
+<td style="text-align: right;">857630</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">4.68</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">98.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">occup</td>
+<td style="text-align: right;">40352</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">413.82</td>
+<td style="text-align: right;">142.16</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">311.00</td>
+<td style="text-align: right;">510.00</td>
+<td style="text-align: right;">521.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▃▅▇▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lstoccup</td>
+<td style="text-align: right;">317106</td>
+<td style="text-align: right;">0.72</td>
+<td style="text-align: right;">766.74</td>
+<td style="text-align: right;">310.89</td>
+<td style="text-align: right;">111</td>
+<td style="text-align: right;">413.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▁▃▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">secoccup</td>
+<td style="text-align: right;">907939</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">5.32</td>
+<td style="text-align: right;">3.28</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▅▆▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">firm1</td>
+<td style="text-align: right;">867451</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">5.98</td>
+<td style="text-align: right;">3.40</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▃▂▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">firm2</td>
+<td style="text-align: right;">976553</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">6.59</td>
+<td style="text-align: right;">2.84</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▂▂▂▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">hh</td>
+<td style="text-align: right;">707834</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: right;">1.51</td>
+<td style="text-align: right;">0.62</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">mhw</td>
+<td style="text-align: right;">663763</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">1.56</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mie</td>
+<td style="text-align: right;">535561</td>
+<td style="text-align: right;">0.53</td>
+<td style="text-align: right;">1.54</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">occuphh</td>
+<td style="text-align: right;">121452</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">702.33</td>
+<td style="text-align: right;">341.26</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">410.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▂▃▁▁▇</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lstocchh</td>
+<td style="text-align: right;">398206</td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">944.47</td>
+<td style="text-align: right;">186.24</td>
+<td style="text-align: right;">111</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▁▁▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">soclass</td>
+<td style="text-align: right;">848904</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">7.58</td>
+<td style="text-align: right;">21.52</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">typecmty</td>
+<td style="text-align: right;">375445</td>
+<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">1.98</td>
+<td style="text-align: right;">0.98</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▃▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">denom</td>
+<td style="text-align: right;">643077</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">355.64</td>
+<td style="text-align: right;">391.20</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">110.00</td>
+<td style="text-align: right;">120.00</td>
+<td style="text-align: right;">990.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">churchat</td>
+<td style="text-align: right;">732949</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">4.52</td>
+<td style="text-align: right;">2.70</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▅▇▂▁▅</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">religf1</td>
+<td style="text-align: right;">1073779</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">1.70</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">religf2</td>
+<td style="text-align: right;">926553</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">2.03</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">income</td>
+<td style="text-align: right;">52308</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">29.28</td>
+<td style="text-align: right;">39.39</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">96.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sizecmty</td>
+<td style="text-align: right;">29636</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">5.07</td>
+<td style="text-align: right;">11.44</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">regionat</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">269.51</td>
+<td style="text-align: right;">149.54</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">132.00</td>
+<td style="text-align: right;">240.00</td>
+<td style="text-align: right;">320.00</td>
+<td style="text-align: right;">999.00</td>
+<td style="text-align: left;">▅▇▂▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">language</td>
+<td style="text-align: right;">427786</td>
+<td style="text-align: right;">0.62</td>
+<td style="text-align: right;">7.79</td>
+<td style="text-align: right;">2.81</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▂▁▁▁▇</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">matpmat</td>
+<td style="text-align: right;">599861</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">2.15</td>
+<td style="text-align: right;">1.49</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mediause</td>
+<td style="text-align: right;">740096</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">1.99</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▂▁▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">oli</td>
+<td style="text-align: right;">258713</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">2.67</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▇▁▁▁</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">scmi</td>
+<td style="text-align: right;">665960</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">4.37</td>
+<td style="text-align: right;">1.68</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">5.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: left;">▂▂▇▁▂</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">eppi</td>
+<td style="text-align: right;">794327</td>
+<td style="text-align: right;">0.30</td>
+<td style="text-align: right;">27.69</td>
+<td style="text-align: right;">40.21</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">6.00</td>
+<td style="text-align: right;">13.00</td>
+<td style="text-align: right;">99.00</td>
+<td style="text-align: left;">▇▁▁▁▂</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tea</td>
+<td style="text-align: right;">638056</td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">2.37</td>
+<td style="text-align: right;">2.20</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: left;">▇▁▁▁▁</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </section>
-<section id="remove-junk-variables" class="level1">
-<h1>Remove junk variables</h1>
+<section id="check-column-names" class="level1">
+<h1>Check column names</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(eb_data<span class="sc">$</span>mediause)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(eb_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-     1      2      3      4      7      8      9 
-166824 128310  71049  19534   2514    445   5612 </code></pre>
+<pre><code>  [1] "study_id" "version"  "id"       "split"    "year"     "eb"      
+  [7] "nation1"  "nation2"  "eleclist" "wsample"  "wnation"  "weuro"   
+ [13] "unifictn" "membrshp" "benefit"  "regret"   "euspeed1" "euspeed2"
+ [19] "speedup"  "comm"     "commf"    "ecpres"   "ecpresf"  "epinfo"  
+ [25] "epinfof"  "epimp1"   "epimp2"   "epimpf"   "epelfut"  "mepatt"  
+ [31] "eurogov"  "semmedia" "semhope"  "semgood"  "trustep"  "trustec" 
+ [37] "trustcm"  "trustcj"  "trusteo"  "trustecb" "trusteca" "trustcr" 
+ [43] "trustsec" "ecfinfo"  "ecint3"   "ecint4"   "ecimp"    "underst" 
+ [49] "feel"     "citizen"  "cpcultur" "cpcurr"   "cpdatap"  "cpdrugs" 
+ [55] "cpeduc"   "cpenvir"  "cpforpol" "cpimmigr" "cpindust" "cppasyl" 
+ [61] "cppress"  "cpscien"  "cpsecur"  "cpthird"  "cpunemp"  "cpvatax" 
+ [67] "cpwelfar" "cpworker" "cpworsec" "satislfe" "happinss" "better"  
+ [73] "econpast" "finapast" "peaceful" "conflict" "worldwar" "poldisc" 
+ [79] "persuade" "polint"   "newstv"   "newspap"  "newsrad"  "sochange"
+ [85] "valpri1"  "valpri2"  "relimp"   "natpride" "satisdmo" "satisdeu"
+ [91] "efficacy" "mvanm"    "mvanw"    "mvecol"   "mvnatur"  "closepty"
+ [97] "feelclo"  "voteint"  "inclvote" "lastvote" "particip" "euvonext"
+[103] "lrs"      "party"    "unionr"   "unionhh"  "unions"   "married" 
+[109] "educ"     "educrec"  "sex"      "age"      "agerec1"  "agerec2" 
+[115] "agerec3"  "agerec4"  "sizehh"   "children" "childold" "childyng"
+[121] "occup"    "lstoccup" "secoccup" "firm1"    "firm2"    "hh"      
+[127] "mhw"      "mie"      "occuphh"  "lstocchh" "soclass"  "typecmty"
+[133] "denom"    "churchat" "religf1"  "religf2"  "income"   "sizecmty"
+[139] "regionat" "language" "matpmat"  "mediause" "oli"      "scmi"    
+[145] "eppi"     "tea"     </code></pre>
 </div>
+</div>
+<section id="data-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning">4. Data Cleaning</h2>
+</section>
+</section>
+<section id="we-first-handle-missing-values-and-convert-labelled-variables-into-usable-formats." class="level1">
+<h1>We first handle missing values and convert labelled variables into usable formats.</h1>
+</section>
+<section id="clean-numeric-only-variables" class="level1">
+<h1>Clean numeric-only variables</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">income =</span> <span class="fu">if_else</span>(income <span class="sc">&gt;=</span> <span class="dv">96</span>, <span class="cn">NA_real_</span>, income)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="convert-labelled-variables-to-factors-with-labels" class="level1">
+<h1>Convert labelled variables to factors with labels</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(haven<span class="sc">::</span>is.labelled), haven<span class="sc">::</span>as_factor))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="standardize-country-names" class="level2">
+<h2 class="anchored" data-anchor-id="standardize-country-names">5. Standardize Country Names</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">nation1 =</span> nation1 <span class="sc">|&gt;</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_to_lower</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      stringr<span class="sc">::</span><span class="fu">str_to_title</span>(),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">nation1 =</span> <span class="fu">case_when</span>(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      nation1 <span class="sc">==</span> <span class="st">"Germany-West"</span> <span class="sc">~</span> <span class="st">"Germany"</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      nation1 <span class="sc">==</span> <span class="st">"Germany-East"</span> <span class="sc">~</span> <span class="st">"Germany"</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>      nation1 <span class="sc">==</span> <span class="st">"Northern Ireland"</span> <span class="sc">~</span> <span class="st">"United Kingdom"</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>      nation1 <span class="sc">==</span> <span class="st">"Great Britain"</span> <span class="sc">~</span> <span class="st">"United Kingdom"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> nation1</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="clean-likert-variables" class="level2">
+<h2 class="anchored" data-anchor-id="clean-likert-variables">6. Clean Likert Variables</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>clean_likert <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_factor</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_to_title</span>() <span class="co">#|&gt; </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Dk") |&gt; </span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Na") |&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Inap") |&gt; </span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Dk,Na") |&gt; </span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Dk, Na") |&gt; </span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># na_if("Depends")</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="apply-function-to-multiple-columns" class="level1">
+<h1>Apply function to multiple columns</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(mediause, particip, polint, ecint3, ecint4, relimp), clean_likert))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="feature-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="feature-engineering">7. Feature Engineering</h2>
+</section>
+</section>
+<section id="we-convert-ordinal-survey-responses-into-numeric-scales." class="level1">
+<h1>We convert ordinal survey responses into numeric scales.</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">mediause_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>      mediause <span class="sc">==</span> <span class="st">"Very Low"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      mediause <span class="sc">==</span> <span class="st">"Low"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      mediause <span class="sc">==</span> <span class="st">"High"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>      mediause <span class="sc">==</span> <span class="st">"Very High"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">particip_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>      particip <span class="sc">==</span> <span class="st">"Certainly Not"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>      particip <span class="sc">==</span> <span class="st">"Probably Not"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>      particip <span class="sc">==</span> <span class="st">"Probably Yes"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>      particip <span class="sc">==</span> <span class="st">"Certainly Yes"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">polint_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>      polint <span class="sc">==</span> <span class="st">"Not At All"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>      polint <span class="sc">==</span> <span class="st">"Not Much"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      polint <span class="sc">==</span> <span class="st">"To Some Extent"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>      polint <span class="sc">==</span> <span class="st">"A Great Deal"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">ecint3_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      ecint3 <span class="sc">==</span> <span class="st">"Not At All"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>      ecint3 <span class="sc">==</span> <span class="st">"A Little"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>      ecint3 <span class="sc">==</span> <span class="st">"Very Interested"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">ecint4_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>      ecint4 <span class="sc">==</span> <span class="st">"Not At All"</span> <span class="sc">~</span> <span class="dv">1</span>, </span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>      ecint4 <span class="sc">==</span> <span class="st">"Not Much"</span> <span class="sc">~</span> <span class="dv">2</span>, </span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>      ecint4 <span class="sc">==</span> <span class="st">"To Some Extent"</span> <span class="sc">~</span> <span class="dv">3</span>, </span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>      ecint4 <span class="sc">==</span> <span class="st">"A Great Deal"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">relimp_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>      relimp <span class="sc">==</span> <span class="st">"Little Importance"</span> <span class="sc">~</span> <span class="dv">1</span>, </span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>      relimp <span class="sc">==</span> <span class="st">"Some Importance"</span> <span class="sc">~</span> <span class="dv">2</span>, </span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>      relimp <span class="sc">==</span> <span class="st">"Great Importance"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_real_</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(eb_data<span class="sc">$</span>mediause, <span class="st">"labels"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(nation1) <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">nation1 =</span> <span class="fu">as.factor</span>(nation1)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>VERY HIGH      high       low  VERY LOW        dk        na      inap 
-        1         2         3         4         7         8         9 </code></pre>
+<pre><code># A tibble: 16 × 2
+   nation1             n
+   &lt;fct&gt;           &lt;int&gt;
+ 1 Austria         35113
+ 2 Belgium         89906
+ 3 Denmark         84566
+ 4 Finland         37869
+ 5 France          91414
+ 6 Germany        141139
+ 7 Greece          70266
+ 8 Ireland         84395
+ 9 Italy           92163
+10 Luxembourg      38459
+11 Netherlands     89269
+12 Norway          11989
+13 Portugal        59947
+14 Spain           60123
+15 Sweden          33671
+16 United Kingdom 114095</code></pre>
 </div>
 </div>
+<p>#Check numeric columns</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">ends_with</span>(<span class="st">"_num"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  mediause_num     particip_num      polint_num        ecint3_num     
+ Min.   :1.00     Min.   :1.00     Min.   :1.00      Min.   :1.00     
+ 1st Qu.:3.00     1st Qu.:3.00     1st Qu.:2.00      1st Qu.:1.00     
+ Median :3.00     Median :4.00     Median :2.00      Median :2.00     
+ Mean   :3.15     Mean   :3.26     Mean   :2.34      Mean   :1.96     
+ 3rd Qu.:4.00     3rd Qu.:4.00     3rd Qu.:3.00      3rd Qu.:2.00     
+ Max.   :4.00     Max.   :4.00     Max.   :4.00      Max.   :3.00     
+ NA's   :748667   NA's   :980022   NA's   :1025693   NA's   :1056492  
+   ecint4_num       relimp_num     
+ Min.   :1.00     Min.   :1.00     
+ 1st Qu.:2.00     1st Qu.:1.00     
+ Median :2.00     Median :2.00     
+ Mean   :2.34     Mean   :2.01     
+ 3rd Qu.:3.00     3rd Qu.:3.00     
+ Max.   :4.00     Max.   :3.00     
+ NA's   :993210   NA's   :1067288  </code></pre>
+</div>
+</div>
+<section id="religion-trends-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="religion-trends-over-time">8. Religion Trends Over Time</h2>
+</section>
+</section>
+<section id="aggregate-the-data-at-the-country-year-level-require-minimum-observations" class="level1">
+<h1>Aggregate the data at the country-year level, require minimum observations</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>agg <span class="ot">&lt;-</span> eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(nation1, year) <span class="sc">|&gt;</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">relimp_mean =</span> <span class="fu">mean</span>(relimp_num, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_obs =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(relimp_num)),</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="check-years-per-country" class="level1">
+<h1>Check years per country</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>agg <span class="sc">|&gt;</span> </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(nation1) <span class="sc">|&gt;</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n_years =</span> <span class="fu">n</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 16 × 2
+   nation1        n_years
+   &lt;chr&gt;            &lt;int&gt;
+ 1 Austria              9
+ 2 Belgium             32
+ 3 Denmark             30
+ 4 Finland             10
+ 5 France              32
+ 6 Germany             32
+ 7 Greece              23
+ 8 Ireland             30
+ 9 Italy               32
+10 Luxembourg          30
+11 Netherlands         32
+12 Norway               7
+13 Portugal            18
+14 Spain               18
+15 Sweden               9
+16 United Kingdom      30</code></pre>
+</div>
+</div>
+</section>
+<section id="filter-to-usable-data" class="level1">
+<h1>Filter to usable data</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>agg_clean <span class="ot">&lt;-</span> agg <span class="sc">|&gt;</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(relimp_mean)) <span class="sc">|&gt;</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n_obs <span class="sc">&gt;</span> <span class="dv">50</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(nation1) <span class="sc">|&gt;</span> </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">n</span>() <span class="sc">&gt;</span> <span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>agg_clean <span class="sc">|&gt;</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(year, relimp_mean)) <span class="sc">+</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="fl">1.2</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> nation1, <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="fl">1.5</span>, <span class="dv">3</span>, <span class="fl">0.5</span>)) <span class="sc">+</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Avg. Religious Importance"</span>,</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Religion in European Countries (1972–2002)"</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.spacing =</span> <span class="fu">unit</span>(<span class="fl">0.8</span>, <span class="st">"lines"</span>),</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">size =</span> <span class="fl">0.5</span>)</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="why-religion-was-not-included-in-the-model" class="level3">
+<h3 class="anchored" data-anchor-id="why-religion-was-not-included-in-the-model">Why Religion Was Not Included in the Model</h3>
+<p>Although religion was explored descriptively, it was not included in the regression model due to data limitations and modeling priorities. The religion variable (<code>relimp</code>) has substantial missingness, which would further reduce the already limited number of complete observations if included.</p>
+<p>In addition, the analysis focuses on core predictors of political participation—political interest, media use, and income—which are more directly tied to voting behavior. Religion is therefore used for exploratory trend analysis rather than included in the main regression specification.</p>
+</section>
+<section id="model-setup" class="level2">
+<h2 class="anchored" data-anchor-id="model-setup">9. Model Setup</h2>
+</section>
+</section>
+<section id="identify-countries-with-sufficient-complete-case-observations" class="level1">
+<h1>Identify countries with sufficient complete-case observations</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(nation1) <span class="sc">|&gt;</span> </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">valid =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(particip_num) <span class="sc">&amp;</span> </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                <span class="sc">!</span><span class="fu">is.na</span>(income) <span class="sc">&amp;</span> </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                <span class="sc">!</span><span class="fu">is.na</span>(polint_num) <span class="sc">&amp;</span> </span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                <span class="sc">!</span><span class="fu">is.na</span>(mediause_num)),</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">pct_valid =</span> valid <span class="sc">/</span> n</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(valid))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 16 × 4
+   nation1             n valid pct_valid
+   &lt;chr&gt;           &lt;int&gt; &lt;int&gt;     &lt;dbl&gt;
+ 1 United Kingdom 114095  1771    0.0155
+ 2 Netherlands     89269  1670    0.0187
+ 3 Greece          70266  1655    0.0236
+ 4 France          91414  1628    0.0178
+ 5 Italy           92163  1601    0.0174
+ 6 Denmark         84566  1500    0.0177
+ 7 Germany        141139  1438    0.0102
+ 8 Belgium         89906  1309    0.0146
+ 9 Ireland         84395  1098    0.0130
+10 Portugal        59947   702    0.0117
+11 Spain           60123   658    0.0109
+12 Luxembourg      38459   450    0.0117
+13 Austria         35113     0    0     
+14 Finland         37869     0    0     
+15 Norway          11989     0    0     
+16 Sweden          33671     0    0     </code></pre>
+</div>
+</div>
+</section>
+<section id="create-helper-function-for-regression-datasets" class="level1">
+<h1>Create helper function for regression datasets</h1>
+<p>#All models are estimated on complete-case samples to ensure consistent comparison across predictors. While this reduces the sample # size, it avoids introducing bias from inconsistent missingness patterns across variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>create_model_data <span class="ot">&lt;-</span> <span class="cf">function</span>(country_name) {</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  eb_data <span class="sc">|&gt;</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(nation1 <span class="sc">==</span> country_name) <span class="sc">|&gt;</span> </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(particip_num),</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(income),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(polint_num),</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(mediause_num)</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="regression-models" class="level2">
+<h2 class="anchored" data-anchor-id="regression-models">10. Regression Models</h2>
+</section>
+</section>
+<section id="filter-dataset-to-include-only-complete-cases" class="level1">
+<h1>Filter dataset to include only complete cases</h1>
+<section id="country-selection" class="level2">
+<h2 class="anchored" data-anchor-id="country-selection">Country Selection</h2>
+<p>The United Kingdom, France, and the Netherlands were selected based on data availability and comparability. Due to substantial missingness across key variables in the Eurobarometer dataset, only a small subset of observations contains complete information for voting intention, income, political interest, and media use. These three countries provide the largest number of complete cases (approximately 1,600–1,800 observations each), allowing for more reliable model estimation.</p>
+<p>In addition, they represent comparable Western European democracies with similar political and media environments, making them suitable for cross-country comparison. This approach prioritizes data quality and consistency over full geographic coverage.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>gb_model <span class="ot">&lt;-</span> <span class="fu">create_model_data</span>(<span class="st">"United Kingdom"</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>fr_model <span class="ot">&lt;-</span> <span class="fu">create_model_data</span>(<span class="st">"France"</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>nl_model <span class="ot">&lt;-</span> <span class="fu">create_model_data</span>(<span class="st">"Netherlands"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="explicitly-state-observations-in-regression" class="level1">
+<h1>Explicitly state observations in regression</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(gb_model)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1771</code></pre>
+</div>
+</div>
+</section>
+<section id="run-regression" class="level1">
+<h1>Run regression</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>model_gb <span class="ot">&lt;-</span> <span class="fu">lm</span>(particip_num <span class="sc">~</span> income <span class="sc">+</span> polint_num <span class="sc">+</span> mediause_num <span class="sc">+</span> year, <span class="at">data =</span> gb_model)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>model_fr <span class="ot">&lt;-</span> <span class="fu">lm</span>(particip_num <span class="sc">~</span> income <span class="sc">+</span> polint_num <span class="sc">+</span> mediause_num <span class="sc">+</span> year, <span class="at">data =</span> fr_model)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>model_nl <span class="ot">&lt;-</span> <span class="fu">lm</span>(particip_num <span class="sc">~</span> income <span class="sc">+</span> polint_num <span class="sc">+</span> mediause_num <span class="sc">+</span> year, <span class="at">data =</span> nl_model)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"United Kingdom"</span> <span class="ot">=</span> model_gb,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"France"</span> <span class="ot">=</span> model_fr,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Netherlands"</span> <span class="ot">=</span> model_nl</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_woqwrwa9o8o0txprmve8 = TinyTable.createTableFunctions("tinytable_woqwrwa9o8o0txprmve8");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '37', j: 2 }, { i: '37', j: 3 }, { i: '37', j: 4 } ], css_id: 'tinytable_css_e0vt4jozrdtasrwf4erw',}, 
+          { positions: [ { i: '30', j: 2 }, { i: '30', j: 3 }, { i: '30', j: 4 } ], css_id: 'tinytable_css_wu7ut4btrbze1kdl7gwx',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '11', j: 2 }, { i: '12', j: 2 }, { i: '13', j: 2 }, { i: '14', j: 2 }, { i: '15', j: 2 }, { i: '16', j: 2 }, { i: '17', j: 2 }, { i: '18', j: 2 }, { i: '19', j: 2 }, { i: '20', j: 2 }, { i: '21', j: 2 }, { i: '22', j: 2 }, { i: '23', j: 2 }, { i: '24', j: 2 }, { i: '25', j: 2 }, { i: '26', j: 2 }, { i: '27', j: 2 }, { i: '28', j: 2 }, { i: '29', j: 2 }, { i: '31', j: 2 }, { i: '32', j: 2 }, { i: '33', j: 2 }, { i: '34', j: 2 }, { i: '35', j: 2 }, { i: '36', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '11', j: 3 }, { i: '12', j: 3 }, { i: '13', j: 3 }, { i: '14', j: 3 }, { i: '15', j: 3 }, { i: '16', j: 3 }, { i: '17', j: 3 }, { i: '18', j: 3 }, { i: '19', j: 3 }, { i: '20', j: 3 }, { i: '21', j: 3 }, { i: '22', j: 3 }, { i: '23', j: 3 }, { i: '24', j: 3 }, { i: '25', j: 3 }, { i: '26', j: 3 }, { i: '27', j: 3 }, { i: '28', j: 3 }, { i: '29', j: 3 }, { i: '31', j: 3 }, { i: '32', j: 3 }, { i: '33', j: 3 }, { i: '34', j: 3 }, { i: '35', j: 3 }, { i: '36', j: 3 }, { i: '1', j: 4 }, { i: '2', j: 4 }, { i: '3', j: 4 }, { i: '4', j: 4 }, { i: '5', j: 4 }, { i: '6', j: 4 }, { i: '7', j: 4 }, { i: '8', j: 4 }, { i: '9', j: 4 }, { i: '10', j: 4 }, { i: '11', j: 4 }, { i: '12', j: 4 }, { i: '13', j: 4 }, { i: '14', j: 4 }, { i: '15', j: 4 }, { i: '16', j: 4 }, { i: '17', j: 4 }, { i: '18', j: 4 }, { i: '19', j: 4 }, { i: '20', j: 4 }, { i: '21', j: 4 }, { i: '22', j: 4 }, { i: '23', j: 4 }, { i: '24', j: 4 }, { i: '25', j: 4 }, { i: '26', j: 4 }, { i: '27', j: 4 }, { i: '28', j: 4 }, { i: '29', j: 4 }, { i: '31', j: 4 }, { i: '32', j: 4 }, { i: '33', j: 4 }, { i: '34', j: 4 }, { i: '35', j: 4 }, { i: '36', j: 4 } ], css_id: 'tinytable_css_n11z9xatkzlqtw9zlww2',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 } ], css_id: 'tinytable_css_sr47hzqkyd3dkxgn5grw',}, 
+          { positions: [ { i: '37', j: 1 } ], css_id: 'tinytable_css_2qwm5o75ez76sbu7vk2g',}, 
+          { positions: [ { i: '30', j: 1 } ], css_id: 'tinytable_css_09hm83hwkixzbwm0pcrf',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '11', j: 1 }, { i: '12', j: 1 }, { i: '13', j: 1 }, { i: '14', j: 1 }, { i: '15', j: 1 }, { i: '16', j: 1 }, { i: '17', j: 1 }, { i: '18', j: 1 }, { i: '19', j: 1 }, { i: '20', j: 1 }, { i: '21', j: 1 }, { i: '22', j: 1 }, { i: '23', j: 1 }, { i: '24', j: 1 }, { i: '25', j: 1 }, { i: '26', j: 1 }, { i: '27', j: 1 }, { i: '28', j: 1 }, { i: '29', j: 1 }, { i: '31', j: 1 }, { i: '32', j: 1 }, { i: '33', j: 1 }, { i: '34', j: 1 }, { i: '35', j: 1 }, { i: '36', j: 1 } ], css_id: 'tinytable_css_j08j0x6bcd6u7btnn9h0',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_4vh51jjhoriqiiumw9ra',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_woqwrwa9o8o0txprmve8.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_e0vt4jozrdtasrwf4erw, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_e0vt4jozrdtasrwf4erw {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_wu7ut4btrbze1kdl7gwx, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_wu7ut4btrbze1kdl7gwx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_n11z9xatkzlqtw9zlww2, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_n11z9xatkzlqtw9zlww2 { text-align: center }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_sr47hzqkyd3dkxgn5grw, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_sr47hzqkyd3dkxgn5grw {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_2qwm5o75ez76sbu7vk2g, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_2qwm5o75ez76sbu7vk2g {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_09hm83hwkixzbwm0pcrf, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_09hm83hwkixzbwm0pcrf {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_j08j0x6bcd6u7btnn9h0, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_j08j0x6bcd6u7btnn9h0 { text-align: left }
+    #tinytable_woqwrwa9o8o0txprmve8 td.tinytable_css_4vh51jjhoriqiiumw9ra, #tinytable_woqwrwa9o8o0txprmve8 th.tinytable_css_4vh51jjhoriqiiumw9ra {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_woqwrwa9o8o0txprmve8" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">United Kingdom</th>
+                <th scope="col" data-row="0" data-col="3">France</th>
+                <th scope="col" data-row="0" data-col="4">Netherlands</th>
+              </tr>
+        </thead>
+        
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">(Intercept)</td>
+                  <td data-row="1" data-col="2">31.518</td>
+                  <td data-row="1" data-col="3">31.433</td>
+                  <td data-row="1" data-col="4">4.382</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(16.255)</td>
+                  <td data-row="2" data-col="3">(15.440)</td>
+                  <td data-row="2" data-col="4">(14.130)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">income2</td>
+                  <td data-row="3" data-col="2">-0.188</td>
+                  <td data-row="3" data-col="3">0.106</td>
+                  <td data-row="3" data-col="4">0.143</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">(0.144)</td>
+                  <td data-row="4" data-col="3">(0.135)</td>
+                  <td data-row="4" data-col="4">(0.127)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">income3</td>
+                  <td data-row="5" data-col="2">0.165</td>
+                  <td data-row="5" data-col="3">0.031</td>
+                  <td data-row="5" data-col="4">0.349</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1"></td>
+                  <td data-row="6" data-col="2">(0.129)</td>
+                  <td data-row="6" data-col="3">(0.124)</td>
+                  <td data-row="6" data-col="4">(0.121)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">income4</td>
+                  <td data-row="7" data-col="2">0.015</td>
+                  <td data-row="7" data-col="3">0.078</td>
+                  <td data-row="7" data-col="4">0.166</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1"></td>
+                  <td data-row="8" data-col="2">(0.133)</td>
+                  <td data-row="8" data-col="3">(0.127)</td>
+                  <td data-row="8" data-col="4">(0.118)</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">income5</td>
+                  <td data-row="9" data-col="2">-0.012</td>
+                  <td data-row="9" data-col="3">0.144</td>
+                  <td data-row="9" data-col="4">0.295</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1"></td>
+                  <td data-row="10" data-col="2">(0.132)</td>
+                  <td data-row="10" data-col="3">(0.125)</td>
+                  <td data-row="10" data-col="4">(0.115)</td>
+                </tr>
+                <tr>
+                  <td data-row="11" data-col="1">income6</td>
+                  <td data-row="11" data-col="2">0.089</td>
+                  <td data-row="11" data-col="3">0.037</td>
+                  <td data-row="11" data-col="4">0.039</td>
+                </tr>
+                <tr>
+                  <td data-row="12" data-col="1"></td>
+                  <td data-row="12" data-col="2">(0.128)</td>
+                  <td data-row="12" data-col="3">(0.122)</td>
+                  <td data-row="12" data-col="4">(0.121)</td>
+                </tr>
+                <tr>
+                  <td data-row="13" data-col="1">income7</td>
+                  <td data-row="13" data-col="2">-0.002</td>
+                  <td data-row="13" data-col="3">0.183</td>
+                  <td data-row="13" data-col="4">0.246</td>
+                </tr>
+                <tr>
+                  <td data-row="14" data-col="1"></td>
+                  <td data-row="14" data-col="2">(0.125)</td>
+                  <td data-row="14" data-col="3">(0.125)</td>
+                  <td data-row="14" data-col="4">(0.113)</td>
+                </tr>
+                <tr>
+                  <td data-row="15" data-col="1">income8</td>
+                  <td data-row="15" data-col="2">0.092</td>
+                  <td data-row="15" data-col="3">0.034</td>
+                  <td data-row="15" data-col="4">0.335</td>
+                </tr>
+                <tr>
+                  <td data-row="16" data-col="1"></td>
+                  <td data-row="16" data-col="2">(0.121)</td>
+                  <td data-row="16" data-col="3">(0.121)</td>
+                  <td data-row="16" data-col="4">(0.106)</td>
+                </tr>
+                <tr>
+                  <td data-row="17" data-col="1">income9</td>
+                  <td data-row="17" data-col="2">0.098</td>
+                  <td data-row="17" data-col="3">0.144</td>
+                  <td data-row="17" data-col="4">0.372</td>
+                </tr>
+                <tr>
+                  <td data-row="18" data-col="1"></td>
+                  <td data-row="18" data-col="2">(0.127)</td>
+                  <td data-row="18" data-col="3">(0.121)</td>
+                  <td data-row="18" data-col="4">(0.109)</td>
+                </tr>
+                <tr>
+                  <td data-row="19" data-col="1">income10</td>
+                  <td data-row="19" data-col="2">0.052</td>
+                  <td data-row="19" data-col="3">0.065</td>
+                  <td data-row="19" data-col="4">0.391</td>
+                </tr>
+                <tr>
+                  <td data-row="20" data-col="1"></td>
+                  <td data-row="20" data-col="2">(0.124)</td>
+                  <td data-row="20" data-col="3">(0.124)</td>
+                  <td data-row="20" data-col="4">(0.108)</td>
+                </tr>
+                <tr>
+                  <td data-row="21" data-col="1">income11</td>
+                  <td data-row="21" data-col="2">0.222</td>
+                  <td data-row="21" data-col="3">0.125</td>
+                  <td data-row="21" data-col="4">0.347</td>
+                </tr>
+                <tr>
+                  <td data-row="22" data-col="1"></td>
+                  <td data-row="22" data-col="2">(0.125)</td>
+                  <td data-row="22" data-col="3">(0.140)</td>
+                  <td data-row="22" data-col="4">(0.107)</td>
+                </tr>
+                <tr>
+                  <td data-row="23" data-col="1">income12</td>
+                  <td data-row="23" data-col="2">0.128</td>
+                  <td data-row="23" data-col="3">0.018</td>
+                  <td data-row="23" data-col="4">0.457</td>
+                </tr>
+                <tr>
+                  <td data-row="24" data-col="1"></td>
+                  <td data-row="24" data-col="2">(0.134)</td>
+                  <td data-row="24" data-col="3">(0.132)</td>
+                  <td data-row="24" data-col="4">(0.104)</td>
+                </tr>
+                <tr>
+                  <td data-row="25" data-col="1">polint_num</td>
+                  <td data-row="25" data-col="2">0.196</td>
+                  <td data-row="25" data-col="3">0.163</td>
+                  <td data-row="25" data-col="4">0.205</td>
+                </tr>
+                <tr>
+                  <td data-row="26" data-col="1"></td>
+                  <td data-row="26" data-col="2">(0.027)</td>
+                  <td data-row="26" data-col="3">(0.024)</td>
+                  <td data-row="26" data-col="4">(0.027)</td>
+                </tr>
+                <tr>
+                  <td data-row="27" data-col="1">mediause_num</td>
+                  <td data-row="27" data-col="2">0.109</td>
+                  <td data-row="27" data-col="3">0.148</td>
+                  <td data-row="27" data-col="4">0.087</td>
+                </tr>
+                <tr>
+                  <td data-row="28" data-col="1"></td>
+                  <td data-row="28" data-col="2">(0.029)</td>
+                  <td data-row="28" data-col="3">(0.025)</td>
+                  <td data-row="28" data-col="4">(0.031)</td>
+                </tr>
+                <tr>
+                  <td data-row="29" data-col="1">year</td>
+                  <td data-row="29" data-col="2">-0.015</td>
+                  <td data-row="29" data-col="3">-0.014</td>
+                  <td data-row="29" data-col="4">-0.001</td>
+                </tr>
+                <tr>
+                  <td data-row="30" data-col="1"></td>
+                  <td data-row="30" data-col="2">(0.008)</td>
+                  <td data-row="30" data-col="3">(0.008)</td>
+                  <td data-row="30" data-col="4">(0.007)</td>
+                </tr>
+                <tr>
+                  <td data-row="31" data-col="1">Num.Obs.</td>
+                  <td data-row="31" data-col="2">1771</td>
+                  <td data-row="31" data-col="3">1628</td>
+                  <td data-row="31" data-col="4">1670</td>
+                </tr>
+                <tr>
+                  <td data-row="32" data-col="1">R2</td>
+                  <td data-row="32" data-col="2">0.061</td>
+                  <td data-row="32" data-col="3">0.072</td>
+                  <td data-row="32" data-col="4">0.081</td>
+                </tr>
+                <tr>
+                  <td data-row="33" data-col="1">R2 Adj.</td>
+                  <td data-row="33" data-col="2">0.054</td>
+                  <td data-row="33" data-col="3">0.064</td>
+                  <td data-row="33" data-col="4">0.073</td>
+                </tr>
+                <tr>
+                  <td data-row="34" data-col="1">AIC</td>
+                  <td data-row="34" data-col="2">4858.1</td>
+                  <td data-row="34" data-col="3">4072.9</td>
+                  <td data-row="34" data-col="4">4260.6</td>
+                </tr>
+                <tr>
+                  <td data-row="35" data-col="1">BIC</td>
+                  <td data-row="35" data-col="2">4945.8</td>
+                  <td data-row="35" data-col="3">4159.2</td>
+                  <td data-row="35" data-col="4">4347.3</td>
+                </tr>
+                <tr>
+                  <td data-row="36" data-col="1">Log.Lik.</td>
+                  <td data-row="36" data-col="2">-2413.070</td>
+                  <td data-row="36" data-col="3">-2020.445</td>
+                  <td data-row="36" data-col="4">-2114.310</td>
+                </tr>
+                <tr>
+                  <td data-row="37" data-col="1">RMSE</td>
+                  <td data-row="37" data-col="2">0.95</td>
+                  <td data-row="37" data-col="3">0.84</td>
+                  <td data-row="37" data-col="4">0.86</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+<section id="cross-country-coefficient-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="cross-country-coefficient-comparison">11. Cross-Country Coefficient Comparison</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>tidy_gb <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">tidy</span>(model_gb) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">country =</span> <span class="st">"United Kingdom"</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>tidy_fr <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">tidy</span>(model_fr) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">country =</span> <span class="st">"France"</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>tidy_nl <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">tidy</span>(model_nl) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">country =</span> <span class="st">"Netherlands"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>coef_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(tidy_gb, tidy_fr, tidy_nl)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>coef_df_filtered <span class="ot">&lt;-</span> coef_df <span class="sc">|&gt;</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"polint_num"</span>, <span class="st">"mediause_num"</span>, <span class="st">"year"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>coef_df_filtered <span class="ot">&lt;-</span> coef_df_filtered <span class="sc">|&gt;</span> </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">term =</span> <span class="fu">recode</span>(term,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">polint_num =</span> <span class="st">"Political Interest"</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">mediause_num =</span> <span class="st">"Media Use"</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">year =</span> <span class="st">"Year"</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(coef_df_filtered, <span class="fu">aes</span>(<span class="at">x =</span> term, <span class="at">y =</span> estimate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"grey50"</span>) <span class="sc">+</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.5</span>), <span class="at">size =</span> <span class="fl">2.5</span>) <span class="sc">+</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">ymin =</span> estimate <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> std.error,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">ymax =</span> estimate <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> std.error),</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.5</span>),</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">width =</span> <span class="fl">0.15</span>,</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">0.6</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">""</span>,</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Coefficient Estimate"</span>,</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Comparison of Key Predictors Across Countries"</span>,</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Country"</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"United Kingdom"</span> <span class="ot">=</span> <span class="st">"#4C78A8"</span>,</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"France"</span> <span class="ot">=</span> <span class="st">"#F58518"</span>,</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Netherlands"</span> <span class="ot">=</span> <span class="st">"#54A24B"</span></span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major.y =</span> <span class="fu">element_line</span>(<span class="at">color =</span> <span class="st">"grey85"</span>),</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>)</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="cross-country-regression-results" class="level3">
+<h3 class="anchored" data-anchor-id="cross-country-regression-results">Cross-Country Regression Results</h3>
+<p>This analysis examines the relationship between likelihood of voting (<code>particip_num</code>) and a set of predictors—income, political interest, media use, and time (year)—across three countries: the United Kingdom, France, and the Netherlands. The models are estimated on complete-case samples of 1,771, 1,628, and 1,670 observations, respectively.</p>
+<p>Across all three countries, political interest (<code>polint_num</code>) is the strongest and most consistent predictor of voting intention. The coefficient is positive and highly statistically significant in each model (≈ 0.16–0.21), indicating that individuals with greater political engagement are substantially more likely to report that they would vote. This relationship is remarkably stable across national contexts.</p>
+<p>Media use (<code>mediause_num</code>) is also positively associated with voting intention in all three countries, though the magnitude of the effect varies. The relationship is strongest in France (≈ 0.15), moderate in the United Kingdom (≈ 0.11), and somewhat weaker in the Netherlands (≈ 0.09), suggesting that the role of media exposure in shaping political participation may differ across contexts.</p>
+<p>In contrast, income does not appear to be a consistent or meaningful predictor in any of the models. The coefficients across income categories are generally small, lack statistical significance, and do not follow a clear pattern. This suggests that, once political engagement is accounted for, socioeconomic differences contribute little to explaining variation in voting intention.</p>
+<p>The coefficient for year is negative in both the United Kingdom and France, indicating a slight decline in reported voting likelihood over time, though the effect is weak. In the Netherlands, the time trend is effectively null. Overall, temporal effects appear to be modest and not substantively large.</p>
+<p>Model fit is relatively low across all three countries (R² ≈ 0.06–0.08), which is typical for survey-based behavioral data. Notably, the Netherlands exhibits slightly higher explanatory power than the United Kingdom and France, though differences are modest.</p>
+<p>Importantly, these models are estimated on subsets of respondents with complete data across all variables. As a result, the findings reflect patterns among respondents who answered all relevant questions, rather than the full sample.</p>
+<p>Overall, the results suggest that political engagement—particularly interest in politics— is a robust and cross-national predictor of voting intention, while income plays a limited role. Media exposure also contributes positively, though its influence varies somewhat by country.</p>
+<p>These findings suggest that political interest is strongly associated with voting intention, though causal relationships cannot be established with this model.</p>
+<p>Future work could extend this analysis using multilevel (hierarchical) models to explicitly account for country-level variation.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">12. Conclusion</h2>
+<p>Across the United Kingdom, France, and the Netherlands, political interest is the strongest and most consistent predictor of voting intention, with media use also showing a positive but more variable relationship. Income does not appear to play a meaningful role once political engagement is accounted for.</p>
+<p>These findings are based on complete-case samples due to substantial missingness, and should be interpreted as descriptive rather than causal. Overall, the results highlight the importance of political engagement in shaping participation.</p>
+</section>
 </section>
 
 </main>
