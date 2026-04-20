@@ -337,7 +337,7 @@ ggplot(coef_df_filtered, aes(x = term, y = estimate, color = country)) +
     ),
     position = position_dodge(width = 0.5),
     width = 0.15,
-    size = 0.6
+    linewidth = 0.6
   ) +
   labs(
     x = "",
