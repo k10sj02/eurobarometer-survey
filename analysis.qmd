@@ -1,0 +1,456 @@
+---
+title: "Eurobarometer Analysis"
+format: html
+---
+
+## Overview
+
+This analysis explores patterns in voting intention across European countries using Eurobarometer survey data. We focus on the role of political interest, media use, income, and time. Due to substantial missingness in the dataset, the analysis prioritizes countries with sufficient complete observations for reliable estimation.
+
+---
+
+## 1. Setup
+
+```{r}
+#| message: false
+#| warning: false
+# Load core libraries for data manipulation, import, and modeling
+library(tidyverse) # Data wrangling + visualization (dplyr, ggplot2, etc.)
+library(skimr)
+library(haven) # Import Stata (.dta) files
+library(broom) # Convert model outputs into tidy data frames
+library(modelsummary) # Create clean regression tables
+```
+
+## 2. Load the data
+
+```{r}
+#| cache: true
+# Read Eurobarometer dataset (Stata format)
+# This dataset contains survey responses across countries and years
+eb_data <- read_dta("eurobarometer_trends.dta")
+```
+
+## 3. Exploratory Data Analysis (EDA)
+
+# Inspect the data structure
+
+```{r}
+# View structure of dataset:
+# - Variable names
+# - Data types (numeric, factor, etc.)
+# - Sample values
+view(eb_data)
+```
+
+# Check the shape of the data 
+
+```{r}
+# Check dataset dimensions:
+# - Number of rows (observations)
+# - Number of columns (variables)
+dim(eb_data)
+```
+
+# Summary stats for dataset 
+
+```{r}
+# Summary statistics:
+# - Distribution of numeric variables
+# - Factor levels / categorical breakdowns
+# Useful for identifying missing values or anomalies
+skim(eb_data)
+```
+
+# Check column names 
+```{r}
+names(eb_data)
+```
+
+## 4. Data Cleaning 
+
+# We first handle missing values and convert labelled variables into usable formats.
+
+# Clean numeric-only variables
+
+```{r}
+eb_data <- eb_data |> 
+  mutate(
+    income = if_else(income >= 96, NA_real_, income)
+  )
+```
+
+# Convert labelled variables to factors with labels
+```{r}
+eb_data <- eb_data |> 
+  mutate(across(where(haven::is.labelled), haven::as_factor))
+```
+
+## 5. Standardize Country Names
+```{r}
+eb_data <- eb_data |> 
+  mutate(
+    nation1 = nation1 |> 
+      stringr::str_to_lower() |> 
+      stringr::str_to_title(),
+    
+    nation1 = case_when(
+      nation1 == "Germany-West" ~ "Germany",
+      nation1 == "Germany-East" ~ "Germany",
+      nation1 == "Northern Ireland" ~ "United Kingdom",
+      nation1 == "Great Britain" ~ "United Kingdom",
+      TRUE ~ nation1
+    )
+  )
+```
+
+  
+## 6. Clean Likert Variables
+
+```{r}
+clean_likert <- function(x) {
+  x |> 
+    as_factor() |> 
+    str_to_title() #|> 
+    # na_if("Dk") |> 
+    # na_if("Na") |>
+    # na_if("Inap") |> 
+    # na_if("Dk,Na") |> 
+    # na_if("Dk, Na") |> 
+    # na_if("Depends")
+}
+```
+
+# Apply function to multiple columns
+
+```{r}
+eb_data <- eb_data |> 
+  mutate(across(c(mediause, particip, polint, ecint3, ecint4, relimp), clean_likert))
+```
+
+## 7. Feature Engineering
+
+# We convert ordinal survey responses into numeric scales.
+```{r}
+eb_data <- eb_data |> 
+  mutate(
+    mediause_num = case_when(
+      mediause == "Very Low" ~ 1,
+      mediause == "Low" ~ 2,
+      mediause == "High" ~ 3,
+      mediause == "Very High" ~ 4,
+      TRUE ~ NA_real_
+    ),
+    
+    particip_num = case_when(
+      particip == "Certainly Not" ~ 1,
+      particip == "Probably Not" ~ 2,
+      particip == "Probably Yes" ~ 3,
+      particip == "Certainly Yes" ~ 4,
+      TRUE ~ NA_real_
+    ),
+    
+    polint_num = case_when(
+      polint == "Not At All" ~ 1,
+      polint == "Not Much" ~ 2,
+      polint == "To Some Extent" ~ 3,
+      polint == "A Great Deal" ~ 4,
+      TRUE ~ NA_real_
+    ),
+    ecint3_num = case_when(
+      ecint3 == "Not At All" ~ 1,
+      ecint3 == "A Little" ~ 2,
+      ecint3 == "Very Interested" ~ 3,
+      TRUE ~ NA_real_
+    ),
+    ecint4_num = case_when(
+      ecint4 == "Not At All" ~ 1, 
+      ecint4 == "Not Much" ~ 2, 
+      ecint4 == "To Some Extent" ~ 3, 
+      ecint4 == "A Great Deal" ~ 4,
+      TRUE ~ NA_real_
+    ),
+    relimp_num = case_when(
+      relimp == "Little Importance" ~ 1, 
+      relimp == "Some Importance" ~ 2, 
+      relimp == "Great Importance" ~ 3,
+      TRUE ~ NA_real_
+      )
+    )
+```
+
+```{r}
+eb_data |> 
+  count(nation1) |> 
+  mutate(
+    nation1 = as.factor(nation1)) 
+```
+
+#Check numeric columns
+```{r}
+eb_data |> 
+  select(ends_with("_num")) |> 
+  summary()
+```
+
+## 8. Religion Trends Over Time
+
+# Aggregate the data at the country-year level, require minimum observations
+```{r}
+agg <- eb_data |> 
+  group_by(nation1, year) |> 
+  summarise(
+    relimp_mean = mean(relimp_num, na.rm = TRUE),
+    n_obs = sum(!is.na(relimp_num)),
+    .groups = "drop"
+  )
+```
+
+# Check years per country 
+
+```{r}
+agg |> 
+  group_by(nation1) |> 
+  summarise(n_years = n())
+```
+
+# Filter to usable data
+
+```{r}
+agg_clean <- agg |> 
+  filter(!is.na(relimp_mean)) |> 
+  filter(n_obs > 50) |> 
+  group_by(nation1) |> 
+  filter(n() > 2) |> 
+  ungroup()
+```
+
+```{r}
+agg_clean |> 
+  ggplot(aes(year, relimp_mean)) +
+  geom_line(color = "steelblue", size = 0.9) +
+  geom_point(color = "steelblue", size = 1.2, alpha = 0.7) +
+  facet_wrap(~ nation1, ncol = 3) +
+  scale_y_continuous(breaks = seq(1.5, 3, 0.5)) +
+  labs(
+    x = "Year",
+    y = "Avg. Religious Importance",
+    title = "Religion in European Countries (1972–2002)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.spacing = unit(0.8, "lines"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 14, face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+```
+
+### Why Religion Was Not Included in the Model
+
+Although religion was explored descriptively, it was not included in the regression model 
+due to data limitations and modeling priorities. The religion variable (`relimp`) has 
+substantial missingness, which would further reduce the already limited number of 
+complete observations if included.
+
+In addition, the analysis focuses on core predictors of political participation—political 
+interest, media use, and income—which are more directly tied to voting behavior. 
+Religion is therefore used for exploratory trend analysis rather than included in the 
+main regression specification.
+
+## 9. Model Setup
+
+# Identify countries with sufficient complete-case observations
+
+```{r}
+eb_data |> 
+  group_by(nation1) |> 
+  summarise(
+    n = n(),
+    valid = sum(!is.na(particip_num) & 
+                !is.na(income) & 
+                !is.na(polint_num) & 
+                !is.na(mediause_num)),
+    pct_valid = valid / n
+  ) |> 
+  arrange(desc(valid))
+```
+
+# Create helper function for regression datasets
+
+#All models are estimated on complete-case samples to ensure consistent comparison across predictors. While this reduces the sample 
+# size, it avoids introducing bias from inconsistent missingness patterns across variables.
+```{r}
+create_model_data <- function(country_name) {
+  eb_data |> 
+    filter(nation1 == country_name) |> 
+    filter(
+      !is.na(particip_num),
+      !is.na(income),
+      !is.na(polint_num),
+      !is.na(mediause_num)
+    )
+}
+```
+
+## 10. Regression Models
+
+# Filter dataset to include only complete cases
+
+## Country Selection
+
+The United Kingdom, France, and the Netherlands were selected based on data availability and comparability. Due to substantial missingness across key variables in the Eurobarometer dataset, only a small subset of observations contains complete information for voting intention, income, political interest, and media use. These three countries provide the largest number of complete cases (approximately 1,600–1,800 observations each), allowing for more reliable model estimation.
+
+In addition, they represent comparable Western European democracies with similar political and media environments, making them suitable for cross-country comparison. This approach prioritizes data quality and consistency over full geographic coverage.
+
+```{r}
+gb_model <- create_model_data("United Kingdom")
+fr_model <- create_model_data("France")
+nl_model <- create_model_data("Netherlands")
+```
+
+# Explicitly state observations in regression
+
+```{r}
+nrow(gb_model)
+```
+
+# Run regression
+
+```{r}
+model_gb <- lm(particip_num ~ income + polint_num + mediause_num + year, data = gb_model)
+
+model_fr <- lm(particip_num ~ income + polint_num + mediause_num + year, data = fr_model)
+
+model_nl <- lm(particip_num ~ income + polint_num + mediause_num + year, data = nl_model)
+
+modelsummary(
+  list(
+    "United Kingdom" = model_gb,
+    "France" = model_fr,
+    "Netherlands" = model_nl
+  )
+)
+```
+
+## 11. Cross-Country Coefficient Comparison
+
+```{r}
+tidy_gb <- broom::tidy(model_gb) |> mutate(country = "United Kingdom")
+tidy_fr <- broom::tidy(model_fr) |> mutate(country = "France")
+tidy_nl <- broom::tidy(model_nl) |> mutate(country = "Netherlands")
+```
+
+```{r}
+coef_df <- bind_rows(tidy_gb, tidy_fr, tidy_nl)
+```
+
+```{r}
+coef_df_filtered <- coef_df |> 
+  filter(term %in% c("polint_num", "mediause_num", "year"))
+```
+
+```{r}
+coef_df_filtered <- coef_df_filtered |> 
+  mutate(
+    term = recode(term,
+      polint_num = "Political Interest",
+      mediause_num = "Media Use",
+      year = "Year"
+    )
+  )
+```
+
+```{r}
+ggplot(coef_df_filtered, aes(x = term, y = estimate, color = country)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_point(position = position_dodge(width = 0.5), size = 2.5) +
+  geom_errorbar(
+    aes(ymin = estimate - 1.96 * std.error,
+        ymax = estimate + 1.96 * std.error),
+    position = position_dodge(width = 0.5),
+    width = 0.15,
+    size = 0.6
+  ) +
+  labs(
+    x = "",
+    y = "Coefficient Estimate",
+    title = "Comparison of Key Predictors Across Countries",
+    color = "Country"
+  ) +
+  scale_color_manual(values = c(
+    "United Kingdom" = "#4C78A8",
+    "France" = "#F58518",
+    "Netherlands" = "#54A24B"
+  )) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey85"),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+
+### Cross-Country Regression Results
+
+This analysis examines the relationship between likelihood of voting (`particip_num`) 
+and a set of predictors—income, political interest, media use, and time (year)—across 
+three countries: the United Kingdom, France, and the Netherlands. The models are 
+estimated on complete-case samples of 1,771, 1,628, and 1,670 observations, respectively.
+
+Across all three countries, political interest (`polint_num`) is the strongest and 
+most consistent predictor of voting intention. The coefficient is positive and highly 
+statistically significant in each model (≈ 0.16–0.21), indicating that individuals 
+with greater political engagement are substantially more likely to report that they 
+would vote. This relationship is remarkably stable across national contexts.
+
+Media use (`mediause_num`) is also positively associated with voting intention in all 
+three countries, though the magnitude of the effect varies. The relationship is strongest 
+in France (≈ 0.15), moderate in the United Kingdom (≈ 0.11), and somewhat weaker in the 
+Netherlands (≈ 0.09), suggesting that the role of media exposure in shaping political 
+participation may differ across contexts.
+
+In contrast, income does not appear to be a consistent or meaningful predictor in any 
+of the models. The coefficients across income categories are generally small, lack 
+statistical significance, and do not follow a clear pattern. This suggests that, once 
+political engagement is accounted for, socioeconomic differences contribute little to 
+explaining variation in voting intention.
+
+The coefficient for year is negative in both the United Kingdom and France, indicating 
+a slight decline in reported voting likelihood over time, though the effect is weak. 
+In the Netherlands, the time trend is effectively null. Overall, temporal effects appear 
+to be modest and not substantively large.
+
+Model fit is relatively low across all three countries (R² ≈ 0.06–0.08), which is typical 
+for survey-based behavioral data. Notably, the Netherlands exhibits slightly higher 
+explanatory power than the United Kingdom and France, though differences are modest.
+
+Importantly, these models are estimated on subsets of respondents with complete data 
+across all variables. As a result, the findings reflect patterns among respondents who 
+answered all relevant questions, rather than the full sample.
+
+Overall, the results suggest that political engagement—particularly interest in politics—
+is a robust and cross-national predictor of voting intention, while income plays a limited 
+role. Media exposure also contributes positively, though its influence varies somewhat 
+by country.
+
+These findings suggest that political interest is strongly associated with voting intention, 
+though causal relationships cannot be established with this model.
+
+Future work could extend this analysis using multilevel (hierarchical) models to explicitly 
+account for country-level variation.
+
+## 12. Conclusion
+
+Across the United Kingdom, France, and the Netherlands, political interest is the strongest 
+and most consistent predictor of voting intention, with media use also showing a positive but 
+more variable relationship. Income does not appear to play a meaningful role once political 
+engagement is accounted for.
+
+These findings are based on complete-case samples due to substantial missingness, and should be 
+interpreted as descriptive rather than causal. Overall, the results highlight the importance of 
+political engagement in shaping participation.

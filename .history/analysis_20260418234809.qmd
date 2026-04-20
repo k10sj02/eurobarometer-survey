@@ -1,0 +1,32 @@
+---
+title: "Eurobarometer Analysis"
+format: html
+---
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(haven)
+library(broom)
+library(modelsummary)
+```
+
+# Load the data
+
+```{r}
+eb_data <- read_dta("eurobarometer_trends.dta")
+```
+
+# View the data
+
+
+```{r}
+glimpse(eb_data)
+```
+
+
+```{r}
+dim(eb_data)
+summary(eb_data)
+```

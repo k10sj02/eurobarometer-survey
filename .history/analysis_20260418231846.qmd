@@ -1,0 +1,12 @@
+---
+title: "Eurobarometer Analysis"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(haven)
+library(broom)
+library(modelsummary)
+
+data <- read.dta("eurobarometer_trends.dta")

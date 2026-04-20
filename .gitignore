@@ -1,0 +1,17 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+renv/library/
+renv/staging/
+
+*.log
+
+# Large data
+*.dta
+*.csv
+*.rds
+
+# Quarto output (optional)
+_site/
