@@ -21,6 +21,9 @@ renv/staging/
 analysis_cache/
 analysis_files/
 _site/
+analysis.html
 
 # Editor
 .vscode/
+/.quarto/
+**/*.quarto_ipynb
