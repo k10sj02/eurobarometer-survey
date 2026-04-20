@@ -285,7 +285,11 @@ nl_model <- create_model_data("Netherlands")
 ```
 
 ```{r}
-nrow(gb_model)
+c(
+  United_Kingdom = nrow(gb_model),
+  France = nrow(fr_model),
+  Netherlands = nrow(nl_model)
+)
 ```
 
 ### Run regressions
