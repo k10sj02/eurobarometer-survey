@@ -65,7 +65,8 @@ We first handle missing values and convert labelled variables into usable format
 ```{r}
 eb_data <- eb_data |> 
   mutate(
-    income = if_else(income >= 96, NA_real_, income)
+    income = if_else(income >= 96, NA_real_, income),
+    income_num = as.numeric(income)
   )
 ```
 
@@ -245,7 +246,7 @@ eb_data |>
   summarise(
     n = n(),
     valid = sum(!is.na(particip_num) &
-                !is.na(income) &
+                !is.na(income_num) &
                 !is.na(polint_num) &
                 !is.na(mediause_num)),
     pct_valid = valid / n
@@ -263,7 +264,7 @@ create_model_data <- function(country_name) {
     filter(nation1 == country_name) |> 
     filter(
       !is.na(particip_num),
-      !is.na(income),
+      !is.na(income_num),
       !is.na(polint_num),
       !is.na(mediause_num)
     )
@@ -277,6 +278,10 @@ create_model_data <- function(country_name) {
 The United Kingdom, France, and the Netherlands were selected based on data availability and comparability. Due to substantial missingness across key variables in the Eurobarometer dataset, only a small subset of observations contains complete information for voting intention, income, political interest, and media use. These three countries provide the largest number of complete cases (approximately 1,600–1,800 observations each), allowing for more reliable model estimation.
 
 In addition, they represent comparable Western European democracies with similar political and media environments, making them suitable for cross-country comparison. This approach prioritizes data quality and consistency over full geographic coverage.
+
+### Model Specification
+
+Income is treated as an ordinal numeric variable to capture overall socioeconomic gradients while simplifying interpretation, rather than modeling each category separately.
 
 ```{r}
 gb_model <- create_model_data("United Kingdom")
@@ -295,15 +300,28 @@ c(
 ### Run regressions
 
 ```{r}
-model_gb <- lm(particip_num ~ income + polint_num + mediause_num + year, data = gb_model)
-model_fr <- lm(particip_num ~ income + polint_num + mediause_num + year, data = fr_model)
-model_nl <- lm(particip_num ~ income + polint_num + mediause_num + year, data = nl_model)
+model_gb <- lm(particip_num ~ income_num + polint_num + mediause_num + year, data = gb_model)
+model_fr <- lm(particip_num ~ income_num + polint_num + mediause_num + year, data = fr_model)
+model_nl <- lm(particip_num ~ income_num + polint_num + mediause_num + year, data = nl_model)
 
 modelsummary(
   list(
     "United Kingdom" = model_gb,
-    "France"         = model_fr,
-    "Netherlands"    = model_nl
+    "France" = model_fr,
+    "Netherlands" = model_nl
+  ),
+  coef_map = c(
+    "income_num" = "Income",
+    "polint_num" = "Political Interest",
+    "mediause_num" = "Media Use",
+    "year" = "Year"
+  ),
+  stars = TRUE,
+  gof_map = c("nobs", "r.squared", "adj.r.squared"),
+  gof_rename = c(
+    nobs = "Observations",
+    r.squared = "R²",
+    adj.r.squared = "Adj. R²"
   )
 )
 ```
@@ -371,7 +389,7 @@ Across all three countries, political interest (`polint_num`) is the strongest a
 
 Media use (`mediause_num`) is also positively associated with voting intention in all three countries, though the magnitude of the effect varies. The relationship is strongest in France (≈ 0.15), moderate in the United Kingdom (≈ 0.11), and somewhat weaker in the Netherlands (≈ 0.09), suggesting that the role of media exposure in shaping political participation may differ across contexts.
 
-In contrast, income does not appear to be a consistent or meaningful predictor in any of the models. The coefficients across income categories are generally small, lack statistical significance, and do not follow a clear pattern. This suggests that, once political engagement is accounted for, socioeconomic differences contribute little to explaining variation in voting intention.
+Income has a small and inconsistent association with voting intention, suggesting limited explanatory power once political engagement is accounted for. While a modest positive relationship is observed in the United Kingdom and the Netherlands, the effect is not statistically significant in France. Overall, income appears to play a limited role relative to political interest. Results are consistent when modeling income categorically (not shown).
 
 The coefficient for year is negative in both the United Kingdom and France, indicating a slight decline in reported voting likelihood over time, though the effect is weak. In the Netherlands, the time trend is effectively null. Overall, temporal effects appear to be modest and not substantively large.
 
