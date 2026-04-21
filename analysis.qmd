@@ -15,7 +15,8 @@ This analysis explores patterns in voting intention across European countries us
 #| message: false
 #| warning: false
 
-library(tidyverse)
+library(MASS)        # load first (has conflicts)
+library(tidyverse)   # load AFTER to override conflicts
 library(skimr)
 library(haven)
 library(broom)
@@ -297,7 +298,7 @@ c(
 )
 ```
 
-### Run regressions
+### OLS models (main analysis)
 
 ```{r}
 model_gb <- lm(particip_num ~ income_num + polint_num + mediause_num + year, data = gb_model)
@@ -326,7 +327,41 @@ modelsummary(
 )
 ```
 
-## 11. Cross-Country Coefficient Comparison
+## 11. Robustness Check (ordered logit, UK only)
+
+```{r}
+gb_model <- gb_model |> 
+  mutate(
+    particip_ord = factor(
+      particip,
+      levels = c(
+        "Certainly Not",
+        "Probably Not",
+        "Probably Yes",
+        "Certainly Yes"
+      ),
+      ordered = TRUE
+    )
+  )
+```
+
+```{r}
+model_gb_logit <- polr(
+  particip_ord ~ income_num + polint_num + mediause_num + year,
+  data = gb_model,
+  Hess = TRUE
+)
+summary(model_gb_logit)
+```
+To account for the ordinal nature of the dependent variable, an ordered logistic regression was estimated for the United Kingdom as a robustness check.
+
+The results are consistent with the OLS specification. Political interest remains the strongest predictor, media use is positively associated with voting intention, and income shows a weak and only marginally significant effect. 
+
+While coefficients are expressed in log-odds, the direction and relative importance of predictors remain unchanged. This suggests that the main findings are robust to alternative model specifications.
+
+The magnitude of the political interest coefficient is notably larger than other predictors, reinforcing its dominant role in explaining variation in voting intention.
+
+## 12. Cross-country comparison (OLS only)
 
 ```{r}
 tidy_gb <- broom::tidy(model_gb) |> mutate(country = "United Kingdom")
@@ -381,7 +416,7 @@ ggplot(coef_df_filtered, aes(x = term, y = estimate, color = country)) +
   )
 ```
 
-### Cross-Country Regression Results
+## 13. Interpretation (aligned with OLS)
 
 This analysis examines the relationship between likelihood of voting (`particip_num`) and a set of predictors — income, political interest, media use, and time (year) — across three countries: the United Kingdom, France, and the Netherlands. The models are estimated on complete-case samples of 1,771, 1,628, and 1,670 observations, respectively.
 
@@ -401,7 +436,7 @@ Overall, the results suggest that political engagement — particularly interest
 
 These findings suggest that political interest is strongly associated with voting intention, though causal relationships cannot be established with this model. Future work could extend this analysis using multilevel (hierarchical) models to explicitly account for country-level variation.
 
-## 12. Conclusion
+## 13. Conclusion
 
 Across the United Kingdom, France, and the Netherlands, political interest is the strongest and most consistent predictor of voting intention, with media use also showing a positive but more variable relationship. Income does not appear to play a meaningful role once political engagement is accounted for.
 
