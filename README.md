@@ -20,7 +20,7 @@ Due to substantial missingness in the dataset, all models are estimated on compl
 - Linear regression models:
 
 ```r
-particip_num ~ income + polint_num + mediause_num + year
+particip_num ~ income_num + polint_num + mediause_num + year
 ```
 
 - Cross-country coefficient comparison with confidence intervals
@@ -31,7 +31,7 @@ particip_num ~ income + polint_num + mediause_num + year
 
 - **Political interest** is the strongest and most consistent predictor of voting intention across all countries
 - **Media use** is positively associated with participation, though its magnitude varies by country
-- **Income** is not a meaningful predictor once political engagement is accounted for
+- **Income** shows a small and inconsistent relationship with voting intention, with limited explanatory power once political engagement is accounted for
 - Time trends are modest and inconsistent across countries
 
 ---
