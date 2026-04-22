@@ -7,6 +7,10 @@ library(broom)
 
 eb_data <- readRDS("/srv/shiny-server/data/eb_clean.rds")
 
+eb_data <- readRDS("/srv/shiny-server/data/eb_clean.rds") |>
+  select(nation1, year, particip_num, polint_num,
+         mediause_num, relimp_num, income_num)
+
 # ── Choices ────────────────────────────────────────────────────────────────────
 country_choices <- eb_data |>
   distinct(nation1) |>
