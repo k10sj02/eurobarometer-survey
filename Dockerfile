@@ -1,10 +1,14 @@
-FROM --platform=linux/amd64 rocker/verse
+FROM --platform=linux/amd64 rocker/shiny:latest
 
-WORKDIR /srv/shiny-server
+RUN apt-get update && apt-get install -y \
+  libcurl4-openssl-dev \
+  libssl-dev \
+  libxml2-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN R -e "install.packages(c('shiny','haven','broom'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('shiny','tidyverse','haven','broom','ggplot2','dplyr','stringr'), repos='https://cloud.r-project.org/')"
 
-COPY . .
+COPY . /srv/shiny-server/
 
 RUN rm -f /srv/shiny-server/index.html
 
