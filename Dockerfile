@@ -16,10 +16,11 @@ RUN R -e "install.packages(c('shiny','dplyr','ggplot2','stringr','haven','broom'
 
 COPY . /srv/shiny-server/
 
-RUN rm -f /srv/shiny-server/index.html
+COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 
-# Fix permissions so shiny user can read the files
 RUN chown -R shiny:shiny /srv/shiny-server/
+
+RUN rm -f /srv/shiny-server/index.html
 
 EXPOSE 3838
 
