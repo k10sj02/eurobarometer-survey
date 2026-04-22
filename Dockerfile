@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 rocker/tidyverse:latest
+FROM --platform=linux/amd64 rocker/shiny:latest
 
 RUN apt-get update && apt-get install -y \
   libcurl4-openssl-dev \
@@ -6,10 +6,8 @@ RUN apt-get update && apt-get install -y \
   libxml2-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# Install packages first — cached unless this line changes
-RUN R -e "install.packages(c('shiny','haven','broom'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('shiny','tidyverse','haven','broom'), repos='https://cloud.r-project.org/')"
 
-# Copy code after — changes here won't bust the package cache
 COPY . /srv/shiny-server/
 
 RUN rm -f /srv/shiny-server/index.html
