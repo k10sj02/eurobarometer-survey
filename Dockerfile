@@ -16,4 +16,4 @@ RUN rm -f /srv/shiny-server/index.html
 
 EXPOSE 3838
 
-CMD ["/usr/bin/shiny-server"]
+CMD ["R", "-e", "options(shiny.trace=TRUE); shiny::runApp('/srv/shiny-server/app')"]
