@@ -1,3 +1,6 @@
+options(shiny.maxRequestSize = 30*1024^2)
+gc()
+
 library(shiny)
 library(dplyr)
 library(ggplot2)
