@@ -8,9 +8,7 @@ library(haven)
 library(stringr)
 library(broom)
 
-eb_data <- readRDS("/srv/shiny-server/data/eb_clean.rds")
-
-eb_data <- readRDS("/srv/shiny-server/data/eb_clean.rds") |>
+eb_data <- readRDS("../data/eb_clean.rds") |>
   select(nation1, year, particip_num, polint_num,
          mediause_num, relimp_num, income_num)
 
@@ -840,15 +838,15 @@ server <- function(input, output, session) {
     active <- if (is.null(input$active_stat)) "mean" else input$active_stat
 
     make_box <- function(key, label, val, extra = NULL) {
-      is_active <- identical(key, active)
-      div(
-        class = paste("stat-box", if (is_active) "active"),
-        `data-key` = key,
-        div(class = "stat-label", label),
-        div(class = "stat-value c1", val),
-        if (!is.null(extra)) extra
-      )
-    }
+  is_active <- identical(key, active)
+  box_class <- if (is_active) "stat-box active" else "stat-box"
+  div(class = box_class,
+    `data-key` = key,
+    div(class = "stat-label", label),
+    div(class = "stat-value c1", val),
+    extra
+  )
+}
 
     p_badge <- if (sig_p) {
       div(class = "stat-badge badge-sig", "p < 0.05 ✓")
@@ -916,23 +914,27 @@ server <- function(input, output, session) {
         ", ",
         span(class = "insight-highlight", fmt(s1$ci_high, 2)),
         sprintf("] — a width of %s. ", fmt(ci_width, 3)),
-        if (sig) {
-          tags$span(
-            "The t-statistic is ",
-            span(class = "insight-highlight", fmt(s1$t_stat, 2)),
-            sprintf(" (p = %s), which is statistically significant.", fmt(s1$p_val, 4)),
-            " This means the mean is unlikely to be zero by chance alone."
-          )
-        } else {
-          tags$span("The result is not statistically significant at the 0.05 level.")
+        {
+          if (sig) {
+            tags$span(
+              "The t-statistic is ",
+              span(class = "insight-highlight", fmt(s1$t_stat, 2)),
+              sprintf(" (p = %s), which is statistically significant.", fmt(s1$p_val, 4)),
+              " This means the mean is unlikely to be zero by chance alone."
+            )
+          } else {
+            tags$span("The result is not statistically significant at the 0.05 level.")
+          }
         }
       ),
-      if (skew_flag) {
-        tags$p(
-          style = "margin-top: 10px;",
-          tags$strong("Note: "),
-          "The mean and median diverge noticeably, suggesting the distribution may be skewed. Consider whether the mean is the best summary statistic here."
-        )
+      {
+        if (skew_flag) {
+          tags$p(
+            style = "margin-top: 10px;",
+            tags$strong("Note: "),
+            "The mean and median diverge noticeably, suggesting the distribution may be skewed. Consider whether the mean is the best summary statistic here."
+          )
+        }
       },
       tags$p(
         style = "margin-top: 10px;",
@@ -1032,15 +1034,11 @@ server <- function(input, output, session) {
       )
     }
 
+    overlap_class <- if (overlap) "overlap-badge overlap-yes" else "overlap-badge overlap-no"
+    overlap_label <- if (overlap) "CIs overlap - difference uncertain" else "CIs do not overlap - likely meaningful difference"
+
     div(
-      div(
-        class = paste("overlap-badge", if (overlap) "overlap-yes" else "overlap-no"),
-        if (overlap) {
-          "CIs overlap - difference uncertain"
-        } else {
-          "CIs do not overlap - likely meaningful difference"
-        }
-      ),
+      div(class = overlap_class, overlap_label),
       tags$table(
         style = sprintf(
           "width:100%%; border-collapse:collapse; border-top:1px solid %s;", pal$border
