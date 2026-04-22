@@ -1,11 +1,18 @@
-FROM --platform=linux/amd64 rocker/verse:latest
+FROM --platform=linux/amd64 rocker/shiny
 
-RUN R -e "install.packages(c('haven','broom'), repos='https://cloud.r-project.org/')"
+WORKDIR /srv/shiny-server
 
+# Install required packages
+RUN R -e "install.packages(c('haven','broom','renv'), repos='https://cloud.r-project.org/')"
+
+# Copy EVERYTHING (this is the key fix)
+COPY . .
+
+# Restore renv environment (if you're using renv)
+RUN R -e "renv::restore()"
+
+# Remove default Shiny page
 RUN rm -f /srv/shiny-server/index.html
-
-COPY app /srv/shiny-server/app
-COPY data /srv/shiny-server/data
 
 EXPOSE 3838
 

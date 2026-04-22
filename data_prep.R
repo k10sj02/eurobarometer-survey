@@ -20,6 +20,7 @@ load_eb_data <- function(path = "eurobarometer_trends.dta") {
     # ---- Country cleaning ----
     mutate(
       nation1 = nation1 |>
+        as.character() |>
         str_to_lower() |>
         str_to_title(),
       nation1 = case_when(
