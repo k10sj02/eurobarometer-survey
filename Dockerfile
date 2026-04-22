@@ -18,6 +18,9 @@ COPY . /srv/shiny-server/
 
 RUN rm -f /srv/shiny-server/index.html
 
+# Fix permissions so shiny user can read the files
+RUN chown -R shiny:shiny /srv/shiny-server/
+
 EXPOSE 3838
 
 CMD ["/usr/bin/shiny-server"]
