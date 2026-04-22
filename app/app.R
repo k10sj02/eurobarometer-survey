@@ -457,7 +457,7 @@ ui <- fluidPage(
     # ── Header ────────────────────────────────────────────────────────────────
     div(
       class = "app-header",
-      div(class = "app-title", "Survey Statistics Explorer"),
+      div(class = "app-title", "Eurobarometer Survey Statistics Explorer"),
       div(
         class = "app-subtitle",
         "Eurobarometer Trends Dataset · Interactive learning tool for survey statistics"
