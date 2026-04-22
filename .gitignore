@@ -16,6 +16,7 @@ renv/staging/
 *.dta
 *.csv
 *.rds
+!data/eb_clean.rds
 
 # Quarto output + cache
 analysis_cache/
