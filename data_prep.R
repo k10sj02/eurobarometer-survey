@@ -19,10 +19,11 @@ load_eb_data <- function(path = "eurobarometer_trends.dta") {
     mutate(across(c(mediause, particip, polint, ecint3, ecint4, relimp), haven::as_factor)) |>
     # ---- Country cleaning ----
     mutate(
-      nation1 = nation1 |>
-        as.character() |>
-        str_to_lower() |>
-        str_to_title(),
+  nation1 = nation1 |>
+    haven::as_factor() |>   # extract the label first
+    as.character() |>        # then convert to plain string
+    str_to_lower() |>
+    str_to_title(),
       nation1 = case_when(
         nation1 == "Germany-West" ~ "Germany",
         nation1 == "Germany-East" ~ "Germany",
