@@ -5,6 +5,6 @@ account: k10sj02
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17203766
-bundleId: 11891251
+bundleId: 11891282
 url: https://k10sj02.shinyapps.io/eurobarometer-survey-explorer/
 version: 1
