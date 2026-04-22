@@ -8,9 +8,7 @@ library(haven)
 library(stringr)
 library(broom)
 
-eb_data <- readRDS("eb_clean.rds") |>
-  select(nation1, year, particip_num, polint_num,
-         mediause_num, relimp_num, income_num)
+eb_data <- readRDS("eb_clean.rds")
 
 # ── Choices ────────────────────────────────────────────────────────────────────
 country_choices <- eb_data |>
