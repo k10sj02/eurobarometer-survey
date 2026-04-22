@@ -5,7 +5,11 @@ library(haven)
 library(stringr)
 library(broom)
 
-eb_data <- readRDS("../data/eb_clean.rds")
+if (file.exists("data/eb_clean.rds")) {
+  eb_data <- readRDS("data/eb_clean.rds")
+} else {
+  eb_data <- readRDS("../data/eb_clean.rds")
+}
 
 # ── Choices ────────────────────────────────────────────────────────────────────
 country_choices <- eb_data |>
