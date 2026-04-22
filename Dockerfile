@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
   libjpeg-dev \
   && rm -rf /var/lib/apt/lists/*
 
-RUN R -e "install.packages(c('shiny','tidyverse','haven','broom'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('shiny','dplyr','ggplot2','stringr','haven','broom'), repos='https://cloud.r-project.org/')"
 
 COPY . /srv/shiny-server/
 
