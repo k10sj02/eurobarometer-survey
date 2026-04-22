@@ -8,7 +8,7 @@ library(haven)
 library(stringr)
 library(broom)
 
-eb_data <- readRDS("../data/eb_clean.rds") |>
+eb_data <- readRDS("eb_clean.rds") |>
   select(nation1, year, particip_num, polint_num,
          mediause_num, relimp_num, income_num)
 
