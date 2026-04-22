@@ -1,9 +1,13 @@
-FROM rocker/shiny:latest
+FROM --platform=linux/amd64 rocker/shiny:latest
 
-RUN R -e "install.packages(c('tidyverse','haven','broom','stringr','ggplot2'), \
-  repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages(c('tidyverse','haven','broom','stringr','ggplot2'), repos='https://cloud.r-project.org/')"
 
-COPY . /srv/shiny-server/
+# Remove default landing page (important)
+RUN rm /srv/shiny-server/index.html
+
+# Copy app + data
+COPY app /srv/shiny-server/app
+COPY data /srv/shiny-server/data
 
 EXPOSE 3838
 

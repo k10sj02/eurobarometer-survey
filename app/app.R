@@ -5,8 +5,7 @@ library(haven)
 library(stringr)
 library(broom)
 
-source("data_prep.R")
-eb_data <- load_eb_data()
+eb_data <- readRDS("../data/eb_clean.rds")
 
 # ── Choices ────────────────────────────────────────────────────────────────────
 country_choices <- eb_data |>

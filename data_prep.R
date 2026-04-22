@@ -16,7 +16,7 @@ load_eb_data <- function(path = "eurobarometer_trends.dta") {
       income_num = as.numeric(income)
     ) |>
     # ---- Label conversion ----
-    mutate(across(where(haven::is.labelled), haven::as_factor)) |>
+    mutate(across(c(mediause, particip, polint, ecint3, ecint4, relimp), haven::as_factor)) |>
     # ---- Country cleaning ----
     mutate(
       nation1 = nation1 |>
