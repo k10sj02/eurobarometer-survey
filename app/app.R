@@ -5,11 +5,7 @@ library(haven)
 library(stringr)
 library(broom)
 
-if (file.exists("data/eb_clean.rds")) {
-  eb_data <- readRDS("data/eb_clean.rds")
-} else {
-  eb_data <- readRDS("../data/eb_clean.rds")
-}
+eb_data <- readRDS("/srv/shiny-server/data/eb_clean.rds")
 
 # ── Choices ────────────────────────────────────────────────────────────────────
 country_choices <- eb_data |>
